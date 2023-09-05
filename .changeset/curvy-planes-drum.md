@@ -1,5 +1,0 @@
----
-"happiness": minor
----
-
-Stripe integration
