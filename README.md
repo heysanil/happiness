@@ -1,34 +1,76 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# happiness
+
+`happiness` is an open-source donation page platform. It was initially built to power donation pages for [Slingshot Giving](https://slingshot.giving) and [Hack+](https://hackplus.io).
 
 ## Getting Started
 
-First, run the development server:
+`happiness` is currently built to run on Vercel's Edge Runtime using PlanetScale's serverless driver. Other MySQL databases should work by adjusting the Drizzle configuration to use `mysql2` instead of the PlanetScale driver, but are currently untested.
+
+To get started, create a clone of this repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+git clone --mirror https://github.com/heysanil/happiness
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Install dependencies using `pnpm`:
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` to `.env.local` and set all of the required environmental variables. Optionally, update non-environmental variables in `happiness.config.ts` and replace icons/logos in `public`.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Push the database schema to your database:
 
-## Learn More
+```bash
+pnpm db:push
+```
 
-To learn more about Next.js, take a look at the following resources:
+This will create the required tables with a `happiness_` prefix, so you can use an existing database (all future schema pushes will also be scoped to `happiness_`-prefixed tables).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Then, run the development server using `pnpm dev` (or the production server using `pnpm start`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+You can also open a Drizzle Studio UI using `pnpm db:gui`, or run both the development server and Drizzle Studio UI using `pnpm dev:db`. Drizzle Studio runs on port 3100 by default, but this behavior can be changed in `package.json`.
 
-## Deploy on Vercel
+## API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Happiness exposes a REST API for managing pages, donations, and donors. The API documentation can be found at `/api` when running the server, and a JSON OpenAPI spec can be downloaded at `/api/openapi.json`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Using a non-MySQL database
+
+For now, there are two main ways to use a non-MySQL database with Happiness:
+
+1. Update the Drizzle schema & configuration to use a different database driver. You will need to manually update each `XXColumns` definition to use the correct Drizzle `core` types.
+2. Update the operations functions in `src/db/ops`. You will need to manually rewrite each function to adapt to your database. This will essentially disable the Drizzle ORM, but will allow you to use any database (including NoSQL databases). You should still use the types and Zod schemas exported from the Drizzle schema and ensure all functions maintain the same return formats.
+
+You only need to do one of these; if you update the Drizzle schema & configuration, you can leave the operations functions as-is, and vice versa.
+
+If you proceed with either of these routes, we ask that you open-source your work so that others can benefit from it. We are also open to accepting pull requests that add support for other databases, as well as promoting community-maintained forks that adapt Happiness to other databases.
+
+## Basic structure
+
+Any number of `Pages` can be set up, which are either a simple donation page or a 'story' style page with more customization.
+
+Every `Donation` is linked to both a `Page` and a `Donor`.
+
+Donors begin their donation on the page. Upon selecting their amount and preferences, they are redirected to a Stripe Checkout page to complete their donation. Once the donation is complete, they are redirected back to the page. Donations are only recorded to the database after payments are successfully processed and the donor is redirected back to the page.
+
+Recurring donations are handled fully through Stripe; incoming donation webhooks are used to update the database.
+
+## Development
+
+### API
+
+All API routes currently exist under [`src/app/(api)/v1`](./src/app/(api)/v1).
+
+Each route is defined in a directory's `route.ts` file. Every `route.ts` should be colocated with a `schemas.ts` file that defines the OpenAPI schemas for each operation in the route.
+
+The OpenAPI spec is generated in [`src/app/(api)/api/oas/index.ts`](./src/app/(api)/api/oas/index.ts). Components can be defined there, and then shared across paths via `$ref`.
+
+The API docs are generated using Stoplight Elements, and live in [src/app/(api)/api](./src/app/(api)/api).
+
+## Coming soon
+
+- [ ] Administrator portal and dashboard
+  - [ ] Stripe Connect + multi-tenancy
+- [ ] API key management
+- [ ] Updater for smooth upgrades instead of relying on Git cloning

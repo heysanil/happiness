@@ -1,3 +1,14 @@
 {
-  "extends": "next/core-web-vitals"
+    "root": true,
+    "extends": "@ssh",
+    "plugins": [
+        "absolute-imports"
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+        "import/extensions": "off",
+        "absolute-imports/only-absolute-imports": 1
+    }
 }
