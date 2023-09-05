@@ -1,19 +1,20 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { selectPageSchema, pages } from '@db/schema';
 import { db } from '@db/init';
 import { eq } from 'drizzle-orm';
 import { HappinessError } from 'src/util/HappinessError';
-import { validateID, validateReturn } from '@db/ops/shared';
+import { validateReturn } from '@db/ops/shared';
+import { Prefixes } from 'src/util/generateID';
 
 /**
- * Retrieves a page by ID.
- * @param id - The ID of the page to retrieve.
+ * Retrieves a page by ID or slug.
+ * @param search - The ID or slug of the page to retrieve.
  */
-export const getPage = async (id: string): Promise<z.infer<typeof selectPageSchema>> => {
-    await validateID('Page', id);
+export const getPage = async (search: string): Promise<z.infer<typeof selectPageSchema>> => {
+    await z.string().parseAsync(search);
 
     const query = await db.query.pages.findFirst({
-        where: eq(pages.id, id),
+        where: search.startsWith(Prefixes.Page) ? eq(pages.id, search) : eq(pages.slug, search),
     });
 
     if (!query) {

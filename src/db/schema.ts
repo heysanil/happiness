@@ -5,6 +5,8 @@ import {
 import { relations, sql } from 'drizzle-orm';
 import { generateID, Prefixes } from 'src/util/generateID';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { HappinessConfig } from 'happiness.config';
+import type { z } from 'zod';
 
 const mysqlTable = mysqlTableCreator((name) => `happiness_${name}`);
 
@@ -15,13 +17,16 @@ const PagesColumns = {
     slug: varchar('slug', { length: 255 }).notNull().unique(),
     kind: mysqlEnum('kind', ['simple', 'story']).notNull(),
     name: varchar('name', { length: 255 }).notNull(),
+    organizer: varchar('organizer', { length: 255 }).notNull().default(HappinessConfig.name),
+    fsProject: varchar('fs_project', { length: 255 }),
     title: varchar('title', { length: 255 }).notNull(),
     subtitle: varchar('subtitle', { length: 255 }),
     story: text('story'),
-    bannerType: mysqlEnum('banner_type', ['image', 'embed']).notNull(),
+    bannerType: mysqlEnum('banner_type', ['image', 'embed']),
     bannerURL: text('banner_url'),
     goal: bigint('goal', { mode: 'number' }),
-    goalCurrency: mysqlEnum('goal_currency', ['usd']),
+    raised: bigint('raised', { mode: 'number' }),
+    currency: mysqlEnum('goal_currency', ['usd']),
 } as const;
 
 export const pages = mysqlTable('pages', PagesColumns);
@@ -101,3 +106,7 @@ export const insertDonorSchema = createInsertSchema(donors)
     });
 export const updateDonorSchema = insertDonorSchema.deepPartial();
 export const selectDonorSchema = createSelectSchema(donors);
+
+export type Page = z.infer<typeof selectPageSchema>;
+export type Donation = z.infer<typeof selectDonationSchema>;
+export type Donor = z.infer<typeof selectDonorSchema>;

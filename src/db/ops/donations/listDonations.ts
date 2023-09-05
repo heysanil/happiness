@@ -25,7 +25,11 @@ export const listDonations = async (
             donor?: string | null;
             /** Whether to filter by page ID. */
             page?: string | null;
-        }
+        },
+        /** The number of results to return. */
+        limit?: number;
+        /** An order by expression for sorting the results. */
+        sort?: SQL[];
     },
 ) => {
     // Validate filters, but allow falsy/undefined values
@@ -53,6 +57,8 @@ export const listDonations = async (
             page: options?.include?.page ? true : undefined,
         },
         where,
+        limit: options?.limit,
+        orderBy: options?.sort,
     });
 
     return validateReturn(z.array(

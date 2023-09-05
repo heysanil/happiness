@@ -5,5 +5,10 @@
 body {
     background-color: var(--pte-colors-backgroundPrimary);
     color: var(--pte-colors-contentPrimary);
+    font-family: 'Graphik Web', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+strong {
+    font-weight: 600 !important;
 }
 

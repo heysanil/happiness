@@ -7,8 +7,6 @@ import {
 } from 'paris/theme';
 import { HappinessConfig } from 'happiness.config';
 
-const inter = Inter({ subsets: ['latin'] });
-
 export const runtime = 'edge';
 
 export const metadata: Metadata = {
@@ -25,6 +23,7 @@ export default function RootLayout({
         <html lang="en">
             <head>
                 <link rel="shortcut icon" href={HappinessConfig.favicon} />
+                <link rel="stylesheet" href="https://slingshot.fm/fonts/graphik/graphik.css" />
                 <style
                     id="pte-vars"
                     // eslint-disable-next-line react/no-danger
@@ -33,7 +32,7 @@ export default function RootLayout({
                     }}
                 />
             </head>
-            <body className={inter.className}>{children}</body>
+            <body>{children}</body>
         </html>
     );
 }

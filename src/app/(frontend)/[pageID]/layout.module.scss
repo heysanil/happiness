@@ -1,0 +1,11 @@
+.container {
+    @apply max-w-screen-lg lg:max-w-screen-xl mx-auto px-4;
+}
+
+.nav {
+    border-bottom: 1px solid var(--pte-colors-borderOpaque);
+}
+
+.footerContainer {
+    background-color: var(--pte-colors-backgroundSecondary);
+}

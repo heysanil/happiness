@@ -28,6 +28,19 @@ export const PageProperties = (
         example: 'Hack+ General Donations',
         maxLength: 255,
     },
+    organizer: {
+        type: 'string',
+        description: 'The name of the organizer of the page. This can be an individual, group, or any other entity.',
+        example: 'Sanil Chawla',
+        maxLength: 255,
+    },
+    fsProject: {
+        type: 'string',
+        description: "If this is a fiscally-sponsored project, the project's name.",
+        nullable: true,
+        example: 'Slingshot Giving',
+        maxLength: 255,
+    },
     title: {
         type: 'string',
         description: 'The public title of the page, used in the page header.',
@@ -61,15 +74,21 @@ export const PageProperties = (
         nullable: true,
         example: 'https://fast.slingshot.fm/sling/static/og.jpg',
     },
+    raised: {
+        type: 'number',
+        description: 'The amount the page has raised, in cents. Only present in `story` pages.',
+        example: 100000,
+        nullable: true,
+    },
     goal: {
         type: 'number',
         description: 'The goal amount of the page, in cents. Only present in `story` pages.',
         example: 100000,
         nullable: true,
     },
-    goalCurrency: {
+    currency: {
         type: 'string',
-        description: 'The currency of the goal amount of the page. Only USD is supported at this time, but other currencies may be supported in a future minor or major update. Only present in `story` pages with a `goal` set.',
+        description: 'The currency of the goal & raised amounts of the page. Only USD is supported at this time, but other currencies may be supported in a future update.',
         enum: ['usd'],
         nullable: true,
     },

@@ -1,0 +1,27 @@
+.shallowPopup {
+    box-shadow: var(--pte-lighting-shallowPopup);
+}
+
+.bgSecondary {
+    background-color: var(--pte-colors-backgroundSecondary);
+}
+
+.bgAccent {
+    background-color: var(--pte-colors-contentAccent);
+}
+
+.divider {
+    border-color: var(--pte-colors-borderOpaque);
+    border-width: 0.5px;
+}
+
+.story {
+    a {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    p {
+        line-height: 1.5em;
+    }
+}

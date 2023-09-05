@@ -20,4 +20,16 @@ export const HappinessConfig = {
      * The platform's favicon.
      */
     favicon: process.env.NEXT_PUBLIC_FAVICON as string || 'https://fast.slingshot.fm/sling/logo/icons-bw/favicon.ico',
+    /**
+     * Whether the platform is in "fiscal sponsor" mode. In this mode, donations are made to the platform, and the platform distributes them to the projects.
+     */
+    fiscalSponsorMode: ((process.env.NEXT_PUBLIC_FISCAL_SPONSOR_MODE as string).toLowerCase() || 'true') === 'true',
+    /**
+     * In fiscal sponsor mode, the name of the 501c3 organization that is the fiscal sponsor. This is used in receipts and disclaimers.
+     */
+    fiscalSponsorName: process.env.NEXT_PUBLIC_FISCAL_SPONSOR_NAME as string || 'Fiscal Sponsor Name',
+    /**
+     * In fiscal sponsor mode, the name of the 501c3 organization that is the fiscal sponsor. This is used in receipts and disclaimers.
+     */
+    fiscalSponsorEIN: process.env.NEXT_PUBLIC_FISCAL_SPONSOR_EIN as string || '00-0000000',
 } as const;

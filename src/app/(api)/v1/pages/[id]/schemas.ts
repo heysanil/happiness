@@ -5,7 +5,7 @@ import { PageSchema } from '@docs/oas/schemas/pages';
 export const PAGES_ID_GET_SCHEMA: OperationObject = {
     operationId: 'getPage',
     summary: 'Get a page',
-    description: 'Gets a specific page.',
+    description: "Gets a specific page. For this endpoint specifically, you can also pass the page's slug in place of an ID.",
     tags: [
         'Pages',
     ],

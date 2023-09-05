@@ -22,7 +22,7 @@ export const validateID = async (
     if (!id && !options?.allowFalsy) {
         throw new HappinessError(`Missing ${resourceType.toLowerCase()} ID`, 400, { id });
     } else if (id) {
-        const validation = await z.string().startsWith(Prefixes[resourceType]).spa(id);
+        const validation = await z.string().startsWith(`${Prefixes[resourceType]}_`).spa(id);
         if (!validation.success) {
             throw new HappinessError(`Invalid ${resourceType.toLowerCase()} ID`, 400, { id, validation });
         }
