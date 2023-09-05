@@ -2,7 +2,7 @@
     "name": "happiness",
     "author": "Sanil Chawla <hi@sanil.co> (https://sanil.co)",
     "license": "Apache-2.0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "scripts": {
         "dev": "next dev -p 3000",
         "dev:db": "concurrently --kill-others 'pnpm dev' 'pnpm db:gui' -n 'next,db-gui' -c 'bgCyan,bgMagenta'",
