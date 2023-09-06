@@ -12,3 +12,6 @@ strong {
     font-weight: 600 !important;
 }
 
+a {
+    cursor: default;
+}

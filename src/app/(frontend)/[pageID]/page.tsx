@@ -121,7 +121,7 @@ export default async function DonationPage(
                     <div className="flex flex-col gap-[20px] w-full p-[20px]">
                         <PageSummary page={page} />
                         <div className="w-full flex flex-col gap-4">
-                            {recentDonations.slice(0, 5).map((donation) => (
+                            {recentDonations.slice(0, 3).map((donation) => (
                                 <div key={donation.id} className="flex flex-row gap-4 items-center">
                                     <div className="w-8 h-8 rounded-full bg-gray-200">
                                         <img

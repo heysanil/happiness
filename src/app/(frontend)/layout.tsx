@@ -1,7 +1,6 @@
 import 'src/app/globals.css';
 import 'paris/theme/global.scss';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import {
     generateCSS, theme,
 } from 'paris/theme';
