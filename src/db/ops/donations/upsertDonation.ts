@@ -16,15 +16,16 @@ import { HappinessError } from 'src/util/HappinessError';
  * @param body - The initial values for the donation.
  * @param donor - The initial values for the donor. Requires first name, last name, and email. If the donor's email already exists, it will be updated.
  */
-export const createDonation = async (
+export const upsertDonation = async (
     body: z.infer<typeof insertDonationSchema> | unknown,
     donor: z.infer<typeof insertDonorSchema> | unknown,
 ) => {
-    const id = generateID(Prefixes.Donation);
     const createdAt = new Date();
 
     const validated = await insertDonationSchema.omit({ donorID: true }).parseAsync(body);
     const validatedDonor = await insertDonorSchema.parseAsync(donor);
+
+    const id = validated.id || generateID(Prefixes.Donation);
 
     const query = await db.transaction(async (tx) => {
         // Ensure page exists
@@ -81,7 +82,15 @@ export const createDonation = async (
         };
 
         // Insert donation
-        await tx.insert(donations).values(donationData);
+        await tx
+            .insert(donations)
+            .values(donationData)
+            .onDuplicateKeyUpdate({
+                set: {
+                    ...validated,
+                    donorID: donorData.id,
+                },
+            });
 
         return donationData;
     });

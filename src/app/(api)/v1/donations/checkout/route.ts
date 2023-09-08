@@ -1,9 +1,10 @@
 import { handleErrors } from '@v1/responses/handleErrors';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createDonationCheckout } from '@lib/stripe/createDonationCheckout';
 import { generateID, Prefixes } from 'src/util/generateID';
 
-export const GET = async (request: Request) => {
+export const GET = async (request: NextRequest) => {
     try {
         const { searchParams } = new URL(request.url);
         const body = Object.fromEntries(searchParams.entries());
@@ -12,12 +13,14 @@ export const GET = async (request: Request) => {
         const donationID = generateID(Prefixes.Donation);
 
         // Generate the success and cancel URLs.
-        const successURL = new URL(request.url);
+        const successURL = request.nextUrl.clone();
         successURL.pathname = '/v1/donations/checkout/success';
         successURL.search = '';
-        const cancelURL = new URL(request.url);
+        successURL.hash = '';
+        const cancelURL = request.nextUrl.clone();
         cancelURL.pathname = `/${body?.pageID}`;
         cancelURL.search = '';
+        cancelURL.hash = '';
 
         // Create the checkout session and redirect to it.
         return NextResponse.redirect(

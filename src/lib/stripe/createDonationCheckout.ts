@@ -36,6 +36,13 @@ export const createDonationCheckout = async (
         ? `${successURL}&session_id={CHECKOUT_SESSION_ID}`
         : `${successURL}?session_id={CHECKOUT_SESSION_ID}`;
 
+    const metadata = {
+        createdByHappiness: 'true',
+        pageID: validated.pageID,
+        visible: `${!validated.anonymous}`,
+        ...validated.message ? { message: validated.message } : {},
+    };
+
     // Create the checkout session
     const checkout = await stripe.checkout.sessions.create({
         line_items: [
@@ -66,8 +73,7 @@ export const createDonationCheckout = async (
                         ? `${validated.projectName} is a fiscally-sponsored nonprofit project of ${HappinessConfig.fiscalSponsorName}, a 501(c)(3) public charity. Your donation is tax-deductible to the extent allowed by law.`
                         : `Your donation is processed by ${HappinessConfig.name}, the platform that ${validated.projectName} is using to raise money.`,
                     metadata: {
-                        createdByHappiness: 'true',
-                        pageID: validated.pageID,
+                        ...metadata,
                         donationID,
                     },
                 },
@@ -75,8 +81,7 @@ export const createDonationCheckout = async (
             submit_type: 'donate',
             payment_intent_data: {
                 metadata: {
-                    createdByHappiness: 'true',
-                    pageID: validated.pageID,
+                    ...metadata,
                     donationID,
                 },
             },
@@ -85,8 +90,7 @@ export const createDonationCheckout = async (
         ...isRecurring ? {
             subscription_data: {
                 metadata: {
-                    createdByHappiness: 'true',
-                    pageID: validated.pageID,
+                    ...metadata,
                 },
             },
         } : {},
@@ -98,8 +102,7 @@ export const createDonationCheckout = async (
             },
         },
         metadata: {
-            pageID: validated.pageID,
-            feeCovered: validated.coverFees.toString(),
+            ...metadata,
             donationID,
         },
     });

@@ -4,7 +4,7 @@ import { ErrorResponse } from '@v1/responses/ErrorResponse';
 import { parseQueryString } from '@v1/middleware/parseQueryString';
 import { NextResponse } from 'next/server';
 import { listDonations } from '@db/ops/donations/listDonations';
-import { createDonation } from '@db/ops/donations/createDonation';
+import { upsertDonation } from '@db/ops/donations/upsertDonation';
 
 /**
  * Lists all donations.
@@ -51,7 +51,7 @@ export const POST = async (request: Request) => {
             return ErrorResponse.badRequest('Donation and donor data must be included in request body').json;
         }
 
-        return NextResponse.json(await createDonation(body.donation, body.donor), { status: 201 });
+        return NextResponse.json(await upsertDonation(body.donation, body.donor), { status: 201 });
     } catch (e) {
         return handleErrors(e);
     }

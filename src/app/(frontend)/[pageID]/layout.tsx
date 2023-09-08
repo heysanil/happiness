@@ -5,6 +5,11 @@ import styles from 'src/app/(frontend)/[pageID]/layout.module.scss';
 import { HappinessConfig } from 'happiness.config';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRightToBracket } from '@fortawesome/free-solid-svg-icons';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    metadataBase: new URL(HappinessConfig.defaultBaseURL),
+};
 
 export default function PageLayout({ children }: {
     children: ReactNode,

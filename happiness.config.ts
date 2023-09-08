@@ -8,6 +8,7 @@ export const HappinessConfig = {
      * The application name.
      */
     name: process.env.NEXT_PUBLIC_APP_NAME as string || 'Happiness',
+    defaultBaseURL: 'https://slingshot.giving',
     /**
      * The platform description, used for SEO/metadata purposes.
      */

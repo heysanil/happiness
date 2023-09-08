@@ -90,8 +90,9 @@ export const updatePageSchema = insertPageSchema.deepPartial();
 export const selectPageSchema = createSelectSchema(pages);
 
 export const insertDonationSchema = createInsertSchema(donations)
+    .partial({ id: true })
     .omit({
-        id: true,
+        // id: true,
         createdAt: true,
         updatedAt: true,
     });

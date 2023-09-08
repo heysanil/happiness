@@ -17,8 +17,27 @@ import { HappinessConfig } from 'happiness.config';
 import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
 import { clsx } from 'clsx';
 import { PageSummary } from '@frontend/[pageID]/PageSummary';
+import type { Metadata, ResolvingMetadata } from 'next';
 
 dayjs.extend(relativeTime);
+
+export async function generateMetadata(
+    { params }: { params: { pageID: string } },
+    parent: ResolvingMetadata,
+) : Promise<Metadata> {
+    const { pageID } = params;
+    const page = await getPage(pageID);
+    return {
+        title: page.title,
+        description: page.subtitle || 'Donate now',
+        openGraph: {
+            images: ['og.jpg'],
+        },
+        twitter: {
+            images: ['og.jpg'],
+        },
+    };
+}
 
 export default async function DonationPage(
     { params }: { params: { pageID: string } },

@@ -10,6 +10,7 @@ To get started, create a clone of this repository:
 
 ```bash
 git clone --mirror https://github.com/heysanil/happiness
+# or, click "Use this template" on GitHub
 ```
 
 Install dependencies using `pnpm`:
@@ -17,7 +18,9 @@ Install dependencies using `pnpm`:
 pnpm install
 ```
 
-Copy `.env.example` to `.env.local` and set all of the required environmental variables. Optionally, update non-environmental variables in `happiness.config.ts` and replace icons/logos in `public`.
+Copy `.env.example` to `.env.local` and set the required environmental variables. As of now, you'll need to sign up for Stripe (for payment processing). If you want Happiness to fire webhooks, you can optionally add a Zeplo queue for more reliable and asynchronous queueing.
+
+You can also directly modify the configuration in `happiness.config.ts` and replace icons/logos in `public`.
 
 Push the database schema to your database:
 
@@ -30,6 +33,8 @@ This will create the required tables with a `happiness_` prefix, so you can use 
 Then, run the development server using `pnpm dev` (or the production server using `pnpm start`).
 
 You can also open a Drizzle Studio UI using `pnpm db:gui`, or run both the development server and Drizzle Studio UI using `pnpm dev:db`. Drizzle Studio runs on port 3100 by default, but this behavior can be changed in `package.json`.
+
+**NOTE: To complete setup, you also need to set up the correct webhooks on the Stripe Dashboard.** Using a service like Zeplo as a proxy to forward webhooks to your app is recommended, which will give you more control over logging and retries, but you can also point Stripe directly to the `/v1/external/stripe` endpoint.
 
 ## API
 
