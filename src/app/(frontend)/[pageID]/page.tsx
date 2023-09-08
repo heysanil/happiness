@@ -100,7 +100,7 @@ export default async function DonationPage(
                     </div>
                     <hr className={styles.divider} />
                     <div className="flex flex-col gap-4">
-                        <Text as="h2" kind="labelMedium">Recent supporters</Text>
+                        {recentDonations.length > 0 ? (<Text as="h2" kind="labelMedium">Recent supporters</Text>) : (<></>)}
                         <div className="flex flex-col gap-4">
                             {recentDonations.map((donation) => (
                                 <Card

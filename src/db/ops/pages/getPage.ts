@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { selectPageSchema, pages } from '@db/schema';
+import { selectPageSchema, pages, donations } from '@db/schema';
 import { db } from '@db/init';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { HappinessError } from 'src/util/HappinessError';
 import { validateReturn } from '@db/ops/shared';
 import { Prefixes } from 'src/util/generateID';
@@ -21,5 +21,15 @@ export const getPage = async (search: string): Promise<z.infer<typeof selectPage
         throw new HappinessError('No such page found', 404, { queryReturn: query });
     }
 
-    return validateReturn(selectPageSchema, query);
+    const [{ raised }] = await db
+        .select({
+            raised: sql<number>`sum(${donations.amount})`,
+        })
+        .from(donations)
+        .where(eq(donations.pageID, query.id));
+
+    return validateReturn(selectPageSchema, {
+        ...query,
+        raised: raised || 1,
+    });
 };
