@@ -31,10 +31,10 @@ export async function generateMetadata(
         title: page.title,
         description: page.subtitle || 'Donate now',
         openGraph: {
-            images: ['og.jpg'],
+            images: [page.bannerType === 'image' && page.bannerURL ? page.bannerURL : 'og.jpg'],
         },
         twitter: {
-            images: ['og.jpg'],
+            images: [page.bannerType === 'image' && page.bannerURL ? page.bannerURL : 'og.jpg'],
         },
     };
 }
