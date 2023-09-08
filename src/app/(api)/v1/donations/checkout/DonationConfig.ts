@@ -28,7 +28,7 @@ export const DonationConfigSchema = z.object({
     pageID: z.string(),
 });
 
-const estFeePercent = 0.029;
+const estFeePercent = 0.039;
 const estFeeFlat = 30;
 export const estimateFee = (amount: number) => (
     Math.round((amount + estFeeFlat) / (1 - estFeePercent)) - amount
