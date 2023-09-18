@@ -23,7 +23,7 @@ export default function PageLayout({ children }: {
                     'py-[24px] mb-[24px] w-full flex flex-row justify-between items-center',
                 )}
             >
-                <a href="https://slingshot.fm" target="_blank" rel="noreferrer">
+                <a className="cursor-pointer" href="https://slingshot.fm/?utm_source=happiness" target="_blank" rel="noreferrer">
                     <div className="flex flex-row justify-start items-center gap-3">
                         <img
                             src={HappinessConfig.logo}
