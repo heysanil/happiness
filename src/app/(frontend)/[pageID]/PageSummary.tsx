@@ -23,7 +23,7 @@ export const PageSummary: FC<{ page: Page }> = ({ page }) => (
                     >
                         <div
                             className={`h-1 rounded-full ${styles.bgAccent}`}
-                            style={{ width: `${Math.max(Math.round((page.raised / page.goal) * 100), 1)}%` }}
+                            style={{ width: `${Math.min(Math.max(Math.round((page.raised / page.goal) * 100), 1), 100)}%` }}
                         />
                     </div>
                 )}
