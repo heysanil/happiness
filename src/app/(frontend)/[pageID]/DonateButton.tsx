@@ -12,6 +12,10 @@ import { Checkbox } from 'paris/checkbox';
 import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
 import { estimateFee, FrequencyOptions } from '@v1/donations/checkout/DonationConfig';
 import { HappinessConfig } from 'happiness.config';
+import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
+
+import clsx from 'clsx';
+import styles from 'src/app/(frontend)/[pageID]/DonateButton.module.scss';
 
 export const AmountPresets = [1000, 2500, 5000, 10000, 25000] as number[];
 
@@ -82,84 +86,100 @@ export const DonateButton = ({
                         }));
                     }}
                 />
-                <div className="grid grid-cols-3 gap-2">
-                    {AmountPresets.map((amount) => (
-                        <Button
-                            shape="rectangle"
-                            kind={amount === donation.amount ? 'primary' : 'secondary'}
-                            key={amount}
+                <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-3 gap-2">
+                        {AmountPresets.map((amount) => (
+                            <DonationAmountSelector
+                                selected={donation.amount === amount}
+                                key={amount}
+                                onClick={() => {
+                                    setDonation((d) => ({
+                                        ...d,
+                                        amount,
+                                    }));
+                                    setShowOtherAmount(false);
+                                }}
+                            >
+                                <Text
+                                    kind="paragraphSmall"
+                                    style={{
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {formatCurrency(amount, 0)}
+                                </Text>
+                            </DonationAmountSelector>
+                        ))}
+                        <DonationAmountSelector
+                            selected={!AmountPresets.includes(donation.amount)}
+                            key="otherAmount"
                             onClick={() => {
                                 setDonation((d) => ({
                                     ...d,
-                                    amount,
+                                    amount: 0,
                                 }));
-                                setShowOtherAmount(false);
+                                setOtherAmountInput('');
+                                setShowOtherAmount(true);
                             }}
                         >
                             <Text
-                                kind="labelMedium"
+                                kind="paragraphSmall"
                                 style={{
-                                    fontWeight: amount === donation.amount ? 600 : 500,
-                                    letterSpacing: '0',
+                                    fontWeight: 500,
                                 }}
                             >
-                                {formatCurrency(amount, 0)}
+                                Other
                             </Text>
-                        </Button>
-                    ))}
-                    <Button
-                        shape="rectangle"
-                        kind={!AmountPresets.includes(donation.amount) ? 'primary' : 'secondary'}
-                        key="otherAmount"
-                        onClick={() => {
-                            setDonation((d) => ({
-                                ...d,
-                                amount: 0,
-                            }));
-                            setShowOtherAmount(true);
+                        </DonationAmountSelector>
+                    </div>
+                    <div
+                        className="overflow-clip"
+                        style={{
+                            transition: 'all 0.2s ease-in-out',
+                            maxHeight: showOtherAmount ? '40px' : 0,
+                            marginBottom: showOtherAmount ? '0px' : '-8px',
                         }}
                     >
-                        <Text
-                            kind="labelMedium"
-                            style={{
-                                fontWeight: !AmountPresets.includes(donation.amount) ? 600 : 500,
-                                letterSpacing: '0',
-                                textTransform: 'none',
+                        <Input
+                            label="Other amount"
+                            hideLabel
+                            placeholder="Enter amount"
+                            type="text"
+                            value={otherAmountInput}
+                            startEnhancer="$"
+                            onChange={(e) => {
+                                const { value } = e.target;
+                                if (/^[0-9]+(\.[0-9]{0,2}|)$/.test(value) || value === '') {
+                                    setOtherAmountInput(value);
+                                    setDonation((d) => ({
+                                        ...d,
+                                        amount: Number(value) * 100,
+                                    }));
+                                }
                             }}
-                        >
-                            Other
-                        </Text>
-                    </Button>
-                </div>
-                <div
-                    className="overflow-clip"
-                    style={{
-                        transition: 'all 0.2s ease-in-out',
-                        maxHeight: showOtherAmount ? '40px' : 0,
-                        marginBottom: showOtherAmount ? 0 : '-24px',
-                    }}
-                >
-                    <Input
-                        label="Other amount"
-                        hideLabel
-                        placeholder="Enter amount"
-                        type="text"
-                        value={otherAmountInput}
-                        startEnhancer="$"
-                        onChange={(e) => {
-                            const { value } = e.target;
-                            if (/^[0-9]+(\.[0-9]{0,2}|)$/.test(value) || value === '') {
-                                setOtherAmountInput(value);
-                                setDonation((d) => ({
-                                    ...d,
-                                    amount: Number(value) * 100,
-                                }));
-                            }
-                        }}
-                    />
+                        />
+                    </div>
                 </div>
                 <TextArea
-                    label="Leave a message (optional)"
+                    // @ts-expect-error -- TODO: ENG-45
+                    label={(
+                        <div>
+                            <Text
+                                kind="paragraphSmall"
+                                style={{
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Message
+                            </Text>
+                            {' '}
+                            <Text
+                                kind="paragraphSmall"
+                            >
+                                (optional)
+                            </Text>
+                        </div>
+                    )}
                     placeholder="Keep up the good work!"
                     value={donation.message}
                     style={{ minHeight: '80px' }}
@@ -171,22 +191,10 @@ export const DonateButton = ({
                         }));
                     }}
                 />
-                <div className="flex flex-row gap-2 justify-start items-center">
-                    <Checkbox
-                        checked={donation.anonymous}
-                        onChange={(e) => {
-                            setDonation((d) => ({
-                                ...d,
-                                anonymous: Boolean(e),
-                            }));
-                        }}
-                    >
-                        <Text kind="paragraphSmall">
-                            Don't show my donation publicly
-                        </Text>
-                    </Checkbox>
-                </div>
-                <div className="flex flex-row gap-2 justify-start items-center">
+                <div className={clsx(
+                    styles.TempCheckboxSpacing,
+                )}
+                >
                     <Checkbox
                         checked={donation.coverFees}
                         onChange={(e) => {
@@ -196,7 +204,9 @@ export const DonateButton = ({
                             }));
                         }}
                     >
-                        <Text kind="paragraphSmall">
+                        <Text
+                            kind="paragraphXSmall"
+                        >
                             Add
                             {' '}
                             <strong>
@@ -207,12 +217,32 @@ export const DonateButton = ({
                         </Text>
                     </Checkbox>
                 </div>
+                <div className={
+                    clsx(
+                        styles.TempCheckboxSpacing,
+                    )
+                }
+                >
+                    <Checkbox
+                        checked={donation.anonymous}
+                        onChange={(e) => {
+                            setDonation((d) => ({
+                                ...d,
+                                anonymous: Boolean(e),
+                            }));
+                        }}
+                    >
+                        <Text kind="paragraphXSmall">
+                            Make my donation anonymous
+                        </Text>
+                    </Checkbox>
+                </div>
                 <Button
                     href={checkoutURL}
                     hrefTarget="_self"
                     disabled={donation.amount === 0}
                 >
-                    {`Donate ${formatCurrency(donation.amount + (donation.coverFees ? estFee : 0), 2)}`}
+                    {`Donate ${formatCurrency(donation.amount + (donation.coverFees ? estFee : 0), 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
                 </Button>
             </Drawer>
         </>
