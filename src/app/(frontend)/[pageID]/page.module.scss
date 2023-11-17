@@ -26,3 +26,16 @@
         margin-bottom: 1em;
     }
 }
+
+.pageCard {
+    padding: 0 !important;
+
+    & img {
+        border-top-left-radius: var(--pte-borders-radius-rounded);
+        border-top-right-radius: var(--pte-borders-radius-rounded);
+    }
+
+    & h3 {
+        line-height: 1.3em;
+    }
+}

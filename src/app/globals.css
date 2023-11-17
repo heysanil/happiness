@@ -15,3 +15,11 @@ strong {
 a {
     cursor: default;
 }
+
+.subtlePopup {
+    box-shadow: var(--pte-lighting-subtlePopup);
+}
+
+.shallowPopup {
+    box-shadow: var(--pte-lighting-shallowPopup);
+}

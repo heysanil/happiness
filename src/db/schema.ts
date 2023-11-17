@@ -1,6 +1,6 @@
 import {
     bigint, boolean,
-    varchar, mysqlEnum, text, timestamp, mysqlTableCreator,
+    varchar, mysqlEnum, text, timestamp, mysqlTableCreator, json,
 } from 'drizzle-orm/mysql-core';
 import { relations, sql } from 'drizzle-orm';
 import { generateID, Prefixes } from 'src/util/generateID';
@@ -18,6 +18,7 @@ const PagesColumns = {
     kind: mysqlEnum('kind', ['simple', 'story']).notNull(),
     name: varchar('name', { length: 255 }).notNull(),
     organizer: varchar('organizer', { length: 255 }).notNull().default(HappinessConfig.name),
+    organizerPicture: text('organizer_picture'),
     fsProject: varchar('fs_project', { length: 255 }),
     title: varchar('title', { length: 255 }).notNull(),
     subtitle: varchar('subtitle', { length: 255 }),
@@ -27,6 +28,7 @@ const PagesColumns = {
     goal: bigint('goal', { mode: 'number' }),
     raised: bigint('raised', { mode: 'number' }),
     currency: mysqlEnum('goal_currency', ['usd']),
+    showRelatedPages: boolean('show_related_pages').notNull().default(false),
 } as const;
 
 export const pages = mysqlTable('pages', PagesColumns);

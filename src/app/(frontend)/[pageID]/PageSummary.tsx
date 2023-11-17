@@ -1,4 +1,4 @@
-import styles from '@frontend/[pageID]/StoryPage.module.scss';
+import styles from '@frontend/[pageID]/page.module.scss';
 import { DonateButton } from '@frontend/[pageID]/DonateButton';
 import { ShareButton } from '@frontend/[pageID]/ShareButton';
 import type { Page } from '@db/schema';

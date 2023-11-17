@@ -25,7 +25,8 @@
       "@docs/*": ["./src/app/(api)/api/*"],
       "@db/*": ["./src/db/*"],
       "@frontend/*": ["./src/app/(frontend)/*"],
-      "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"],
+      "@public/*": ["./public/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -8,7 +8,7 @@ export const HappinessConfig = {
      * The application name.
      */
     name: process.env.NEXT_PUBLIC_APP_NAME as string || 'Happiness',
-    defaultBaseURL: 'https://slingshot.giving',
+    defaultBaseURL: process.env.NEXT_PUBLIC_DEFAULT_BASE_URL as string || 'https://slingshot.giving',
     /**
      * The platform description, used for SEO/metadata purposes.
      */
@@ -17,6 +17,10 @@ export const HappinessConfig = {
      * The platform's logo. SVG with a 1:1 ratio (square or circle) recommended. Can be a path relative to `public/` (recommended) or an absolute URL.
      */
     logo: process.env.NEXT_PUBLIC_LOGO as string || '/logo.svg',
+    /**
+     * A wider logo, which will be used in spacious contexts (like the navbar) if provided.
+     */
+    logoWide: process.env.NEXT_PUBLIC_LOGO_WIDE as string | undefined,
     /**
      * The platform's favicon.
      */
@@ -33,4 +37,8 @@ export const HappinessConfig = {
      * In fiscal sponsor mode, the name of the 501c3 organization that is the fiscal sponsor. This is used in receipts and disclaimers.
      */
     fiscalSponsorEIN: process.env.NEXT_PUBLIC_FISCAL_SPONSOR_EIN as string || '00-0000000',
+    /**
+     * Hide the "Powered by Happiness" text in the footer. :(
+     */
+    hidePoweredByHappiness: ((process.env.NEXT_PUBLIC_HIDE_POWERED_BY as string).toLowerCase() || 'false') === 'true',
 } as const;

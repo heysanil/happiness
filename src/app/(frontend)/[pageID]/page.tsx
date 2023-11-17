@@ -1,23 +1,20 @@
 import { getPage } from '@db/ops/pages/getPage';
 import { Text } from 'paris/text';
-import { Card } from 'paris/card';
-import { Banner } from 'src/app/(frontend)/[pageID]/Banner';
-import styles from '@frontend/[pageID]/StoryPage.module.scss';
-import ReactMarkdown from 'react-markdown';
-import { formatCurrency } from 'src/util/formatCurrency';
 import { ThanksDialog } from '@frontend/[pageID]/ThanksDialog';
 import { listDonations } from '@db/ops/donations/listDonations';
 import { desc } from 'drizzle-orm';
-import type { Donor } from '@db/schema';
+import type { Donation, Donor, Page } from '@db/schema';
 import { donations } from '@db/schema';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import SparkMD5 from 'spark-md5';
 import { HappinessConfig } from 'happiness.config';
 import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
 import { clsx } from 'clsx';
-import { PageSummary } from '@frontend/[pageID]/PageSummary';
 import type { Metadata, ResolvingMetadata } from 'next';
+import { StoryPage } from '@frontend/[pageID]/StoryPage';
+import { SimplePage } from '@frontend/[pageID]/SimplePage';
+import LoginIcon from '@public/login.svg';
+import { db } from '@db/init';
 
 dayjs.extend(relativeTime);
 
@@ -52,120 +49,101 @@ export default async function DonationPage(
         },
         limit: 30,
         sort: [desc(donations.createdAt)],
-    });
+    }) as Array<Donation & { donor: Donor }>;
+
+    const relatedPages: Array<Page> = [];
+    // let relatedPages: Array<Page> = [];
+    // if (page.showRelatedPages && page.fsProject) {
+    //     relatedPages = await db.query.pages.findMany({
+    //         where: (columns, { and, eq }) => and(
+    //             eq(columns.fsProject, page.fsProject as string),
+    //             eq(columns.organizer, page.organizer as string),
+    //         ),
+    //     });
+    // }
+
     return (
         <>
-            <div
-                className={clsx(
-                    'w-full grid items-start gap-6 grid-cols-1 md:grid-cols-12 lg:grid-cols-3',
-                    layoutStyles.container,
-                )}
-            >
-                <div className="w-full flex flex-col gap-2 col-span-full">
-                    <Text as="h1" kind="displaySmall">
-                        {page.title}
-                    </Text>
-                    <Text as="h1" kind="paragraphLarge">
-                        {page.subtitle}
-                    </Text>
-                </div>
-                <div className="md:hidden">
-                    <PageSummary page={page} />
-                </div>
-                <div className="flex flex-col gap-8 md:col-span-7 lg:col-span-2">
-                    {page.bannerType && page.bannerURL && (
-                        <div className={`${styles.shallowPopup} rounded-[8px] overflow-clip`}>
-                            <Banner
-                                kind={page.bannerType}
-                                url={page.bannerURL}
-                                alt={`Banner for ${page.title}`}
+            <div className={clsx(layoutStyles.navContainer, 'sticky top-0')}>
+                <nav
+                    className={clsx(
+                        layoutStyles.container,
+                        page.kind === 'simple' && layoutStyles.simple,
+                        layoutStyles.nav,
+                        'py-[16px] md:py-[24px] mb-[24px] w-full flex flex-row justify-between items-center',
+                    )}
+                >
+                    <a className="cursor-pointer" href="https://slingshot.fm/?utm_source=happiness" target="_blank" rel="noreferrer">
+                        <div className="flex flex-row justify-start items-center gap-3">
+                            <img
+                                src={HappinessConfig.logoWide || HappinessConfig.logo}
+                                alt={HappinessConfig.name}
+                                className="h-[24px]"
                             />
                         </div>
-                    )}
-                    {page.story && (
-                        <ReactMarkdown className={styles.story}>
-                            {page.story}
-                        </ReactMarkdown>
-                    )}
-                    <hr className={styles.divider} />
-                    <div className="flex flex-row justify-between">
-                        <div className="flex flex-col gap-2">
-                            <Text as="h2" kind="labelSmall">Organized by</Text>
-                            <Text as="h3" kind="headingSmall">{page.organizer}</Text>
-                        </div>
-                        <div className="flex flex-col gap-2 text-right items-end">
-                            <Text as="h2" kind="labelSmall">Raising for</Text>
-                            <Text as="h3" kind="headingSmall">{page.fsProject || HappinessConfig.fiscalSponsorName || HappinessConfig.name}</Text>
-                        </div>
-                    </div>
-                    <hr className={styles.divider} />
-                    <div className="flex flex-col gap-4">
-                        {recentDonations.length > 0 ? (<Text as="h2" kind="labelMedium">Recent supporters</Text>) : (<></>)}
-                        <div className="flex flex-col gap-4">
-                            {recentDonations.map((donation) => (
-                                <Card
-                                    kind="flat"
-                                    key={donation.id}
-                                    className="flex flex-row gap-4 items-start"
-                                    style={{ padding: '20px' }}
-                                >
-                                    <div className="w-[47px] h-[47px] shrink-0 rounded-full bg-gray-200">
-                                        <img
-                                            src={donation.visible ? `https://www.gravatar.com/avatar/${SparkMD5.hash((donation.donor as Donor).email)}?s=64&d=${encodeURIComponent('https://fast.slingshot.fm/sling/static/profile.png')}` : 'https://fast.slingshot.fm/sling/static/profile.png'}
-                                            alt="Donor avatar"
-                                            className="w-full h-full rounded-full"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <Text as="p" kind="headingXXSmall">
-                                            {donation.visible ? `${(donation.donor as Donor).firstName} ${(donation.donor as Donor).lastName.charAt(0)}.` : 'Anonymous'}
-                                        </Text>
-                                        <Text as="p" kind="paragraphSmall">
-                                            {formatCurrency(donation.amount, 0, donation.amountCurrency || 'usd')}
-                                            {' · '}
-                                            {dayjs(donation.createdAt).fromNow()}
-                                        </Text>
-                                        {donation.message && (
-                                            <Text as="p" kind="paragraphMedium">
-                                                {donation.message}
-                                            </Text>
-                                        )}
-                                    </div>
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                <Card className="sticky top-4 w-full hidden md:block md:col-span-5 lg:col-span-1">
-                    <div className="flex flex-col gap-[20px] w-full p-[20px]">
-                        <PageSummary page={page} />
-                        <div className="w-full flex flex-col gap-4">
-                            {recentDonations.slice(0, 3).map((donation) => (
-                                <div key={donation.id} className="flex flex-row gap-4 items-center">
-                                    <div className="w-8 h-8 rounded-full bg-gray-200">
-                                        <img
-                                            src={donation.visible ? `https://www.gravatar.com/avatar/${SparkMD5.hash((donation.donor as Donor).email)}?s=64&d=${encodeURIComponent('https://fast.slingshot.fm/sling/static/profile.png')}` : 'https://fast.slingshot.fm/sling/static/profile.png'}
-                                            alt="Donor avatar"
-                                            className="w-full h-full rounded-full"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <Text as="p" kind="paragraphMedium">
-                                            {donation.visible ? `${(donation.donor as Donor).firstName} ${(donation.donor as Donor).lastName.charAt(0)}.` : 'Anonymous'}
-                                        </Text>
-                                        <Text as="p" kind="paragraphSmall">
-                                            <strong>{formatCurrency(donation.amount, 0, donation.amountCurrency || 'usd')}</strong>
-                                            {' · '}
-                                            {dayjs(donation.createdAt).fromNow()}
-                                        </Text>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </Card>
+                    </a>
+                    <a
+                        href="/v1/portal"
+                        target="_blank"
+                        className="cursor-pointer"
+                    >
+                        <LoginIcon width="20px" />
+                    </a>
+                </nav>
+                <div className={clsx(layoutStyles.headerSeparator, 'w-full h-[1px] absolute bottom-0 left-0')} />
             </div>
-            <ThanksDialog page={page} />
+            <main>
+                <div
+                    className={clsx(
+                        'w-full grid items-start gap-6 grid-cols-1 md:grid-cols-12 lg:grid-cols-3',
+                        layoutStyles.container,
+                        page.kind === 'simple' && layoutStyles.simple,
+                    )}
+                >
+                    {page.kind === 'story' && (
+                        <StoryPage page={page} recentDonations={recentDonations} />
+                    )}
+                    {page.kind === 'simple' && (
+                        <SimplePage
+                            page={page}
+                            recentDonations={recentDonations}
+                            relatedPages={relatedPages}
+                        />
+                    )}
+                </div>
+                <ThanksDialog page={page} />
+            </main>
+            <footer
+                className={clsx(
+                    layoutStyles.footerContainer,
+                    'pt-8 pb-16 mt-16 relative',
+                )}
+            >
+                <div className={clsx(layoutStyles.footerSeparator, 'w-full h-1 absolute top-0 left-0')} />
+                <div
+                    className={clsx(
+                        layoutStyles.container,
+                        page.kind === 'simple' && layoutStyles.simple,
+                        'flex flex-row justify-between items-center text-neutral-500',
+                    )}
+                >
+                    <Text as="p" kind="paragraphSmall">
+                        ©
+                        {' '}
+                        {new Date().getFullYear()}
+                        {' '}
+                        {HappinessConfig.name}
+                        . All rights reserved.
+                    </Text>
+                    {!HappinessConfig.hidePoweredByHappiness && (
+                        <a href="https://github.com/heysanil/happiness" target="_blank" rel="noreferrer">
+                            <Text as="p" kind="paragraphSmall" className="underline underline-offset-4">
+                                Powered by Happiness
+                            </Text>
+                        </a>
+                    )}
+                </div>
+            </footer>
         </>
     );
 }
