@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import Frame from '@public/avatar-ring.svg';
+import { pvar } from 'paris/theme';
 import Verified from '@public/verified.svg';
 
 export const Avatar: FC<{
@@ -13,17 +13,22 @@ export const Avatar: FC<{
     width = 32,
     verified = false,
 }) => (
-    <div className="relative aspect-square">
+    <div
+        className="relative shrink-0 bg-black rounded-full flex justify-center items-center"
+        style={{
+            width: `${width}px`,
+            height: `${width}px`,
+            background: pvar('tokens.colors.gradientTeal'),
+        }}
+    >
         <img
             src={src}
             alt={alt}
-            className="aspect-square rounded-full"
-            width={width}
+            className="rounded-full shrink-0"
+            style={{ width: `${width - 2}px`, height: `${width - 2}px` }}
         />
-
-        <Frame className="absolute top-0 left-0 w-full h-full" />
         {verified && (
-            <Verified className="absolute bottom-[-1px] right-[-1px] w-2/5 h-2/5" />
+            <Verified className="absolute bottom-[-1px] right-[-1px] w-2/5 h-2/5 shrink-0" />
         )}
     </div>
 );
