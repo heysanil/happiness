@@ -94,7 +94,7 @@ export const StoryPage: FC<{
                 </div>
             </div>
         </div>
-        <Card className="sticky top-4 w-full hidden md:block md:col-span-5 lg:col-span-1">
+        <Card className="sticky top-[96px] w-full hidden md:block md:col-span-5 lg:col-span-1">
             <div className="flex flex-col gap-[20px] w-full p-[20px]">
                 <PageSummary page={page} />
                 <div className="w-full flex flex-col gap-4">

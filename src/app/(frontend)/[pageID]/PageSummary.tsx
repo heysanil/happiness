@@ -9,7 +9,7 @@ import { HappinessConfig } from 'happiness.config';
 
 export const PageSummary: FC<{ page: Page }> = ({ page }) => (
     <div className="w-full flex flex-col gap-[20px]">
-        {page.raised && (
+        {(page.raised || page.raised === 0) && (
             <div className="flex flex-col gap-2">
                 <Text as="h2" kind="paragraphMedium">
                     <Text kind="headingXSmall">{formatCurrency(page.raised, 0, page.currency || 'usd')}</Text>
