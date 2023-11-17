@@ -12,10 +12,6 @@ const alwaysBypass = {
 };
 
 export const middleware: NextMiddleware = async (req) => {
-    if (req.nextUrl.pathname === '/kindness') {
-        return NextResponse.redirect('https://givebutter.com/kindnessiscool');
-    }
-
     // Bypass the middleware for the following paths
     if (
         alwaysBypass.equals.some((path) => req.nextUrl.pathname === path)
