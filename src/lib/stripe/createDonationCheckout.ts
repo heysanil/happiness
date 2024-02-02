@@ -65,18 +65,18 @@ export const createDonationCheckout = async (
         client_reference_id: donationID,
         ...!isRecurring ? {
             invoice_creation: {
-                enabled: false,
-                // invoice_data: {
-                //     description: `Donation to ${validated.projectName}`,
-                //     custom_fields: [{ name: 'EIN', value: HappinessConfig.fiscalSponsorEIN }],
-                //     footer: HappinessConfig.fiscalSponsorMode
-                //         ? `${validated.projectName} is a fiscally-sponsored nonprofit project of ${HappinessConfig.fiscalSponsorName}, a 501(c)(3) public charity. Your donation is tax-deductible to the extent allowed by law.`
-                //         : `Your donation is processed by ${HappinessConfig.name}, the platform that ${validated.projectName} is using to raise money.`,
-                //     metadata: {
-                //         ...metadata,
-                //         donationID,
-                //     },
-                // },
+                enabled: true,
+                invoice_data: {
+                    description: `Donation to ${validated.projectName}`,
+                    custom_fields: [{ name: 'EIN', value: HappinessConfig.fiscalSponsorEIN }],
+                    footer: HappinessConfig.fiscalSponsorMode
+                        ? `${validated.projectName} is a fiscally-sponsored nonprofit project of ${HappinessConfig.fiscalSponsorName}, a 501(c)(3) public charity. Your donation is tax-deductible to the extent allowed by law.`
+                        : `Your donation is processed by ${HappinessConfig.name}, the platform that ${validated.projectName} is using to raise money.`,
+                    metadata: {
+                        ...metadata,
+                        donationID,
+                    },
+                },
             },
             submit_type: 'donate',
             payment_intent_data: {
