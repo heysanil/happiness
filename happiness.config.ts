@@ -28,7 +28,7 @@ export const HappinessConfig = {
     /**
      * Whether the platform is in "fiscal sponsor" mode. In this mode, donations are made to the platform, and the platform distributes them to the projects.
      */
-    fiscalSponsorMode: ((process.env.NEXT_PUBLIC_FISCAL_SPONSOR_MODE as string).toLowerCase() || 'true') === 'true',
+    fiscalSponsorMode: ((process.env.NEXT_PUBLIC_FISCAL_SPONSOR_MODE as string | undefined)?.toLowerCase() || 'true') === 'true',
     /**
      * In fiscal sponsor mode, the name of the 501c3 organization that is the fiscal sponsor. This is used in receipts and disclaimers.
      */
@@ -40,5 +40,5 @@ export const HappinessConfig = {
     /**
      * Hide the "Powered by Happiness" text in the footer. :(
      */
-    hidePoweredByHappiness: ((process.env.NEXT_PUBLIC_HIDE_POWERED_BY as string).toLowerCase() || 'false') === 'true',
+    hidePoweredByHappiness: ((process.env.NEXT_PUBLIC_HIDE_POWERED_BY as string | undefined)?.toLowerCase() || 'false') === 'true',
 } as const;
