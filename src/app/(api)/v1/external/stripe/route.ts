@@ -38,6 +38,7 @@ export const POST = async (request: NextRequest) => {
                         donationID: z.string().optional(),
                         message: z.string().optional(),
                         visible: z.string().optional(),
+                        tipAmount: z.string().optional(),
                     })
                     .passthrough()
                     .spa(
@@ -70,12 +71,13 @@ export const POST = async (request: NextRequest) => {
                         pageID: metadata.pageID,
                         message: metadata.message,
                         visible: metadata.visible === 'true',
-                        amount: pi.amount_received,
+                        amount: (pi.amount_received - Number(metadata.tipAmount || 0)),
                         amountCurrency: pi.currency,
                         fee: balanceTx.fee,
                         feeCurrency: balanceTx.currency,
                         externalTransactionProvider: 'stripe',
                         externalTransactionID: pi.id,
+                        tipAmount: Number(metadata.tipAmount || 0),
                     },
                     {
                         firstName: customer?.name?.split(' ')[0] || 'Anonymous',

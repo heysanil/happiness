@@ -27,6 +27,7 @@ const initialDonation: DonationConfig = {
     anonymous: false,
     projectName: HappinessConfig.name,
     pageID: '',
+    tipPercent: 0.1,
 };
 
 export const DonateButton = ({
@@ -40,7 +41,10 @@ export const DonateButton = ({
 }) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
-    const [donation, setDonation] = useState<DonationConfig>(initialDonation);
+    const [donation, setDonation] = useState<DonationConfig>({
+        ...initialDonation,
+        projectName: projectName || HappinessConfig.name,
+    });
 
     const [showOtherAmount, setShowOtherAmount] = useState(false);
     const [otherAmountInput, setOtherAmountInput] = useState('' as string);
@@ -240,12 +244,66 @@ export const DonateButton = ({
                             </Text>
                         </Checkbox>
                     </div>
+                    <div className={
+                        clsx(
+                            styles.TempCheckboxSpacing,
+                        )
+                    }
+                    >
+                        <Checkbox
+                            checked={donation.tipPercent !== 0}
+                            onChange={(e) => {
+                                setDonation((d) => ({
+                                    ...d,
+                                    tipPercent: e ? 0.05 : 0,
+                                }));
+                            }}
+                        >
+                            <Text kind="paragraphXSmall">
+                                Add a tip for
+                                {' '}
+                                {HappinessConfig.name}
+                            </Text>
+                        </Checkbox>
+                        {donation.tipPercent !== 0 ? (
+                            <div className="flex flex-col mt-4 gap-4">
+                                <Text kind="paragraphXSmall">
+                                    {HappinessConfig.tipDescription}
+                                </Text>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[0.05, 0.1, 0.2].map((pct) => (
+                                        <DonationAmountSelector
+                                            key={`tip-${pct}`}
+                                            size="small"
+                                            selected={donation.tipPercent === pct}
+                                            onClick={() => {
+                                                setDonation((d) => ({
+                                                    ...d,
+                                                    tipPercent: pct,
+                                                }));
+                                            }}
+                                        >
+                                            <Text
+                                                kind="paragraphXSmall"
+                                                style={{
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                {pct * 100}
+                                                %
+                                            </Text>
+                                        </DonationAmountSelector>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
                     <Button
                         href={checkoutURL}
                         hreftarget="_self"
                         disabled={donation.amount === 0}
                     >
-                        {`Donate ${formatCurrency(donation.amount + (donation.coverFees ? estFee : 0), 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
+                        {`Donate ${formatCurrency(donation.amount + (donation.coverFees ? estFee : 0) + Math.round((donation.amount + (donation.coverFees ? estFee : 0)) * donation.tipPercent), 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
                     </Button>
                 </div>
             </Drawer>

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { HappinessConfig } from 'happiness.config';
 
 export const FrequencyOptions = ['One-time', 'Monthly'] as const;
 export type DonationConfig = {
@@ -16,6 +17,8 @@ export type DonationConfig = {
     projectName: string;
     /** The ID of the page receiving the donation. */
     pageID: string;
+    /** Tip for the platform. */
+    tipPercent: number;
 };
 
 export const DonationConfigSchema = z.object({
@@ -26,6 +29,7 @@ export const DonationConfigSchema = z.object({
     anonymous: z.boolean(),
     projectName: z.string(),
     pageID: z.string(),
+    tipPercent: z.number().gte(0),
 });
 
 const estFeePercent = 0.029 + HappinessConfig.platformFee;

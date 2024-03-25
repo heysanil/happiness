@@ -1,5 +1,6 @@
 .DonationAmountSelector {
     background: var(--pte-colors-backgroundSecondary, #F6F6F6);
+    transition: background-color var(--pte-animations-interaction);
 
     &[data-selected="true"] {
         background: var(--pte-colors-black, #060606);

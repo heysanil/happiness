@@ -45,6 +45,7 @@ export const DonationsColumns = {
     fee: bigint('fee', { mode: 'number' }).notNull().default(0),
     feeCurrency: mysqlEnum('fee_currency', ['usd']).notNull().default('usd'),
     feeCovered: boolean('fee_covered').notNull().default(false),
+    tipAmount: bigint('tip_amount', { mode: 'number' }).notNull().default(0),
     visible: boolean('visible').notNull().default(false),
     message: text('message'),
     externalTransactionProvider: mysqlEnum('external_transaction_provider', ['stripe']),

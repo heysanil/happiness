@@ -26,6 +26,7 @@ export const createDonationCheckout = async (
         anonymous: config.anonymous.toLowerCase() === 'true',
         projectName: config.projectName,
         pageID: config.pageID,
+        tipPercent: Number(config.tipPercent),
     });
 
     const isRecurring = validated.frequency === 'Monthly';
@@ -40,6 +41,7 @@ export const createDonationCheckout = async (
         createdByHappiness: 'true',
         pageID: validated.pageID,
         visible: `${!validated.anonymous}`,
+        tipAmount: `${Math.round(validated.tipPercent * validated.amount)}`,
         ...validated.message ? { message: validated.message } : {},
     };
 
@@ -53,6 +55,18 @@ export const createDonationCheckout = async (
                     product_data: {
                         name: 'Donation',
                         description: `Donation to ${validated.projectName}`,
+                    },
+                    ...(isRecurring ? { recurring: { interval: 'month' } } : {}),
+                },
+                quantity: 1,
+            },
+            {
+                price_data: {
+                    unit_amount: Math.round(validated.tipPercent * validated.amount),
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Tip',
+                        description: `Supporting ${HappinessConfig.name}`,
                     },
                     ...(isRecurring ? { recurring: { interval: 'month' } } : {}),
                 },
