@@ -41,4 +41,12 @@ export const HappinessConfig = {
      * Hide the "Powered by Happiness" text in the footer. :(
      */
     hidePoweredByHappiness: ((process.env.NEXT_PUBLIC_HIDE_POWERED_BY as string | undefined)?.toLowerCase() || 'false') === 'true',
+    /**
+     * A platform fee, as a percentage of the donation amount. This is used to calculate the fee that is added to the donation amount. Defaults to 2%.
+     */
+    platformFee: Number(process.env.NEXT_PUBLIC_PLATFORM_FEE) || 0.02,
+    /**
+     * The description of the tip field. This is used in the donation form.
+     */
+    tipDescription: process.env.NEXT_PUBLIC_TIP_DESCRIPTION as string || 'Slingshot Giving builds the tools that make it easy for creators to run fundraisers like this. If you appreciate our work, consider leaving a tip to help us enable more creators to raise money for impactful causes.',
 } as const;
