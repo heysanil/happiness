@@ -30,6 +30,6 @@ export const getPage = async (search: string): Promise<z.infer<typeof selectPage
 
     return validateReturn(selectPageSchema, {
         ...query,
-        raised: raised || 1,
+        raised: Number(raised) || 1,
     });
 };
