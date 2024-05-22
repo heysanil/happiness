@@ -29,12 +29,14 @@ export const PageSummary: FC<{ page: Page }> = ({ page }) => (
                 )}
             </div>
         )}
-        <div className="w-full flex flex-col gap-[8px] mb-3">
-            <DonateButton
-                projectName={page.fsProject || page.organizer || HappinessConfig.fiscalSponsorName || HappinessConfig.name}
-                pageID={page.id}
-            />
-            <ShareButton page={page} />
-        </div>
+        {page.status !== 'published' ? <></> : (
+            <div className="w-full flex flex-col gap-[8px] mb-3">
+                <DonateButton
+                    projectName={page.fsProject || page.organizer || HappinessConfig.fiscalSponsorName || HappinessConfig.name}
+                    pageID={page.id}
+                />
+                <ShareButton page={page} />
+            </div>
+        )}
     </div>
 );

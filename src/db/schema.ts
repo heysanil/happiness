@@ -29,6 +29,7 @@ const PagesColumns = {
     raised: bigint('raised', { mode: 'number' }),
     currency: mysqlEnum('goal_currency', ['usd']),
     showRelatedPages: boolean('show_related_pages').notNull().default(false),
+    status: mysqlEnum('status', ['draft', 'published', 'inactive']).notNull().default('published'),
 } as const;
 
 export const pages = mysqlTable('pages', PagesColumns);

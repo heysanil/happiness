@@ -15,6 +15,7 @@ import { StoryPage } from '@frontend/[pageID]/StoryPage';
 import { SimplePage } from '@frontend/[pageID]/SimplePage';
 import LoginIcon from '@public/login.svg';
 import { db } from '@db/init';
+import { notFound } from 'next/navigation';
 
 dayjs.extend(relativeTime);
 
@@ -50,6 +51,10 @@ export default async function DonationPage(
         limit: 30,
         sort: [desc(donations.createdAt)],
     }) as Array<Donation & { donor: Donor }>;
+
+    if (page.status === 'draft') {
+        return notFound();
+    }
 
     const relatedPages: Array<Page> = [];
     // let relatedPages: Array<Page> = [];
