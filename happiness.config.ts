@@ -49,4 +49,9 @@ export const HappinessConfig = {
      * The description of the tip field. This is used in the donation form.
      */
     tipDescription: process.env.NEXT_PUBLIC_TIP_DESCRIPTION as string || 'Slingshot Giving builds the tools that make it easy for creators to run fundraisers like this. If you appreciate our work, consider leaving a tip to help us enable more creators to raise money for impactful causes.',
+
+    /**
+     * The prefix to use for the database tables. Defaults to `happiness`.
+     */
+    databaseTablePrefix: process.env.DATABASE_TABLE_PREFIX || 'happiness',
 } as const;

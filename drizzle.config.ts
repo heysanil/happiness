@@ -1,5 +1,6 @@
 import type { Config } from 'drizzle-kit';
 import { configDotenv } from 'dotenv';
+import { HappinessConfig } from 'happiness.config';
 
 configDotenv({
     path: '.env.local',
@@ -16,5 +17,5 @@ export default {
     dbCredentials: {
         connectionString: process.env.DATABASE_URL as string,
     },
-    tablesFilter: ['happiness_*'],
+    tablesFilter: [`${HappinessConfig.databaseTablePrefix}_*`],
 } satisfies Config;

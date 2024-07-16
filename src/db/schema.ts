@@ -8,7 +8,7 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { HappinessConfig } from 'happiness.config';
 import type { z } from 'zod';
 
-const mysqlTable = mysqlTableCreator((name) => `happiness_${name}`);
+const mysqlTable = mysqlTableCreator((name) => `${HappinessConfig.databaseTablePrefix}_${name}`);
 
 const PagesColumns = {
     id: varchar('id', { length: 20 }).primaryKey().$defaultFn(() => generateID(Prefixes.Page)),
