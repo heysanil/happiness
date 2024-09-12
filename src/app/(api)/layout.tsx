@@ -2,6 +2,7 @@ import 'src/app/globals.css';
 import 'paris/theme/global.scss';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { HappinessConfig } from 'happiness.config';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -23,7 +24,10 @@ export default function RootLayout({
             <head>
                 <link rel="shortcut icon" href={HappinessConfig.favicon} />
             </head>
-            <body className={inter.className}>{children}</body>
+            <body className={inter.className}>
+                {children}
+                <SpeedInsights />
+            </body>
         </html>
     );
 }
