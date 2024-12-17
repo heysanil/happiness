@@ -23,7 +23,7 @@ export const POST = async (request: NextRequest) => {
         const event = await stripe.webhooks.constructEventAsync(await request.text(), whSec, stripeWebhookSecret);
 
         switch (event.type) {
-            // We always create invoices for donatinons, so we can rely on the invoice events
+            // We always create invoices for donations, so we can rely on the invoice events
             case 'invoice.paid': {
                 const invoice = event.data.object as Stripe.Invoice;
 
@@ -63,6 +63,16 @@ export const POST = async (request: NextRequest) => {
                 const customer = pi.customer as Stripe.Customer;
                 const charge = pi.latest_charge as Stripe.Charge;
                 const balanceTx = charge.balance_transaction as Stripe.BalanceTransaction;
+
+                if (customer.email) {
+                    // Add customer email as receipt_email for payment intent
+                    await stripe.paymentIntents.update(pi.id, {
+                        receipt_email: customer.email,
+                    })
+                        .catch((e) => {
+                            console.error('Failed to update payment intent receipt email:', e);
+                        });
+                }
 
                 // Upsert donation
                 const donation = await upsertDonation(
