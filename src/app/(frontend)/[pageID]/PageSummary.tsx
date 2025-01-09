@@ -6,8 +6,15 @@ import type { FC } from 'react';
 import { formatCurrency } from 'src/util/formatCurrency';
 import { Text } from 'paris/text';
 import { HappinessConfig } from 'happiness.config';
+import { Button } from 'paris/button';
 
-export const PageSummary: FC<{ page: Page }> = ({ page }) => (
+export const PageSummary: FC<{
+    page: Page,
+    embed?: boolean,
+}> = ({
+    page,
+    embed = false,
+}) => (
     <div className="w-full flex flex-col gap-[20px]">
         {(page.raised || page.raised === 0) && (
             <div className="flex flex-col gap-2">
@@ -31,10 +38,19 @@ export const PageSummary: FC<{ page: Page }> = ({ page }) => (
         )}
         {page.status !== 'published' ? <></> : (
             <div className="w-full flex flex-col gap-[8px] mb-3">
-                <DonateButton
-                    projectName={page.fsProject || page.organizer || HappinessConfig.fiscalSponsorName || HappinessConfig.name}
-                    pageID={page.id}
-                />
+                {!embed ? (
+                    <DonateButton
+                        projectName={page.fsProject || page.organizer || HappinessConfig.fiscalSponsorName || HappinessConfig.name}
+                        pageID={page.id}
+                    />
+                ) : (
+                    <Button
+                        href={`${HappinessConfig.defaultBaseURL}/${page.slug}?open=donate&utm_source=embed`}
+                        hreftarget="_blank"
+                    >
+                        Donate
+                    </Button>
+                )}
                 <ShareButton page={page} />
             </div>
         )}

@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from 'paris/button';
 import { Drawer } from 'paris/drawer';
 import { Text } from 'paris/text';
@@ -39,6 +40,7 @@ export const DonateButton = ({
     pageID?: string,
     className?: string,
 }) => {
+    const params = useSearchParams();
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     const [donation, setDonation] = useState<DonationConfig>({
@@ -65,6 +67,12 @@ export const DonateButton = ({
             ),
         ).toString()}`
     ), [donation, estFee, pageID, projectName]);
+
+    useEffect(() => {
+        if (params.get('open') === 'donate') {
+            setDrawerOpen(true);
+        }
+    }, [params]);
 
     return (
         <>

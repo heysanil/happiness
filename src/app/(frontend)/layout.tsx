@@ -6,6 +6,7 @@ import {
 } from 'paris/theme';
 import { HappinessConfig } from 'happiness.config';
 import { Analytics } from '@vercel/analytics/react';
+import { Toast } from 'paris/toast';
 
 export const runtime = 'edge';
 
@@ -32,7 +33,10 @@ export default function RootLayout({
                     }}
                 />
             </head>
-            <body>{children}</body>
+            <body>
+                {children}
+                <Toast />
+            </body>
             <Analytics />
         </html>
     );
