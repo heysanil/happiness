@@ -35,7 +35,7 @@ export const StoryPage: FC<{
             </div>
         )}
         <div className="md:hidden">
-            <PageSummary page={page} />
+            <PageSummary page={page} embed={embed} />
         </div>
         <div className="flex flex-col gap-8 md:col-span-7 lg:col-span-2">
             {page.bannerType && page.bannerURL && (
