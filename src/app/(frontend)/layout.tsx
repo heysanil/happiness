@@ -7,6 +7,7 @@ import {
 import { HappinessConfig } from 'happiness.config';
 import { Analytics } from '@vercel/analytics/react';
 import { Toast } from 'paris/toast';
+import { Themer } from 'src/util/Themer';
 
 export const runtime = 'edge';
 
@@ -32,6 +33,7 @@ export default function RootLayout({
                         __html: generateCSS(theme),
                     }}
                 />
+                <Themer />
             </head>
             <body>
                 {children}
