@@ -5,6 +5,7 @@ import { IncludeParam } from '@docs/oas/schemas/include';
 import { DonorSchema } from '@docs/oas/schemas/donors';
 import { PageSchema } from '@docs/oas/schemas/pages';
 import { FilterParam } from '@docs/oas/schemas/filter';
+import { timestampFilters } from '@docs/oas/schemas/timestamps';
 
 export const DONATIONS_GET_SCHEMA: OperationObject = {
     operationId: 'listDonations',
@@ -17,6 +18,7 @@ export const DONATIONS_GET_SCHEMA: OperationObject = {
         IncludeParam(['donor', 'page']),
         FilterParam('Page'),
         FilterParam('Donor'),
+        ...timestampFilters,
     ],
     responses: {
         200: {

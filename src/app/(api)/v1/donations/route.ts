@@ -20,6 +20,9 @@ export const GET = async (request: Request) => {
         const donorFilter = searchParams.get('donor');
         const pageFilter = searchParams.get('page');
 
+        const beforeFilter = searchParams.get('before');
+        const afterFilter = searchParams.get('after');
+
         return NextResponse.json(await listDonations({
             include: queryParams?.include ? {
                 donor: Boolean(queryParams.include.donor),
@@ -28,6 +31,8 @@ export const GET = async (request: Request) => {
             filter: {
                 donor: donorFilter,
                 page: pageFilter,
+                before: beforeFilter ? new Date(beforeFilter) : undefined,
+                after: afterFilter ? new Date(afterFilter) : undefined,
             },
         }));
     } catch (e) {

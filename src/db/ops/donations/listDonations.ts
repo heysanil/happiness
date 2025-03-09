@@ -4,8 +4,10 @@ import {
     donations, selectDonationSchema, selectDonorSchema, selectPageSchema,
 } from '@db/schema';
 import { z } from 'zod';
-import type { SQL } from 'drizzle-orm';
-import { and, eq } from 'drizzle-orm';
+import type { SQL, SQLWrapper } from 'drizzle-orm';
+import {
+    and, eq, lte, gte,
+} from 'drizzle-orm';
 
 /**
  * Retrieves all donations.
@@ -21,10 +23,14 @@ export const listDonations = async (
             page?: boolean;
         },
         filter?: {
-            /** Whether to filter by donor ID. */
+            /** Filter by donor ID. */
             donor?: string | null;
-            /** Whether to filter by page ID. */
+            /** Filter by page ID. */
             page?: string | null;
+            /** Filter donations before a certain date. */
+            before?: Date | null;
+            /** Filter donations after a certain date. */
+            after?: Date | null;
         },
         /** The number of results to return. */
         limit?: number;
@@ -37,19 +43,21 @@ export const listDonations = async (
     await validateID('Page', options?.filter?.page, { allowFalsy: true });
 
     // Build filter expression
-    let where: SQL<unknown> | undefined;
-    if (options?.filter?.donor && options?.filter?.page) {
-        where = and(
-            eq(donations.donorID, options.filter.donor),
-            eq(donations.pageID, options.filter.page),
-        );
+    const filters: SQLWrapper[] = [];
+    if (options?.filter?.donor) {
+        filters.push(eq(donations.donorID, options.filter.donor));
     }
-    if (options?.filter?.donor && !options?.filter?.page) {
-        where = eq(donations.donorID, options.filter.donor);
+    if (options?.filter?.page) {
+        filters.push(eq(donations.pageID, options.filter.page));
     }
-    if (!options?.filter?.donor && options?.filter?.page) {
-        where = eq(donations.pageID, options.filter.page);
+    if (options?.filter?.before) {
+        filters.push(lte(donations.createdAt, options.filter.before));
     }
+    if (options?.filter?.after) {
+        filters.push(gte(donations.createdAt, options.filter.after));
+    }
+
+    const where = and(...filters);
 
     const query = await db.query.donations.findMany({
         with: {
