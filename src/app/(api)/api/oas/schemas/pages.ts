@@ -28,6 +28,12 @@ export const PageProperties = (
         example: 'Hack+ General Donations',
         maxLength: 255,
     },
+    status: {
+        type: 'string',
+        description: 'The status of the page.',
+        enum: ['draft', 'published', 'inactive'],
+        nullable: false,
+    },
     organizer: {
         type: 'string',
         description: 'The name of the organizer of the page. This can be an individual, group, or any other entity.',
