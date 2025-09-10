@@ -68,14 +68,14 @@ export default async function DonationPage(
     // }
 
     return (
-        <>
+        <div className="flex flex-col min-h-screen gap-6">
             <div className={clsx(layoutStyles.navContainer, 'sticky top-0')}>
                 <nav
                     className={clsx(
                         layoutStyles.container,
                         page.kind === 'simple' && layoutStyles.simple,
                         layoutStyles.nav,
-                        'py-[16px] md:py-[24px] mb-[24px] w-full flex flex-row justify-between items-center',
+                        'py-[16px] md:py-[24px] w-full flex flex-row justify-between items-center',
                     )}
                 >
                     <a className="cursor-pointer" href="https://slingshot.fm/?utm_source=happiness" target="_blank" rel="noreferrer">
@@ -97,7 +97,7 @@ export default async function DonationPage(
                 </nav>
                 <div className={clsx(layoutStyles.headerSeparator, 'w-full h-[1px] absolute bottom-0 left-0')} />
             </div>
-            <main>
+            <main className="flex-1">
                 <div
                     className={clsx(
                         'w-full grid items-start gap-6 grid-cols-1 md:grid-cols-12 lg:grid-cols-3',
@@ -149,6 +149,6 @@ export default async function DonationPage(
                     )}
                 </div>
             </footer>
-        </>
+        </div>
     );
 }

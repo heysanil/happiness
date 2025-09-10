@@ -35,7 +35,7 @@ export default function RootLayout({
                 />
                 <Themer />
             </head>
-            <body>
+            <body className="min-h-screen">
                 {children}
                 <Toast />
             </body>
