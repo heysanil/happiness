@@ -11,13 +11,13 @@ import { upsertDonation } from '@db/ops/donations/upsertDonation';
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 if (!stripeWebhookSecret) throw new Error('Missing STRIPE_WEBHOOK_SECRET. Please add it to your environment.');
 
-export const POST = async (request: NextRequest) => {
+export const POST = async (request: NextRequest): Promise<NextResponse> => {
     try {
         const { headers } = request;
 
         const whSec = headers?.get('stripe-signature') || null;
         if (typeof whSec !== 'string') {
-            return new HappinessError('Missing stripe-signature header', 400, { headers: Object.fromEntries(headers.entries()) });
+            throw new HappinessError('Missing stripe-signature header', 400, { headers: Object.fromEntries(headers.entries()) });
         }
 
         const event = await stripe.webhooks.constructEventAsync(await request.text(), whSec, stripeWebhookSecret);
@@ -48,7 +48,7 @@ export const POST = async (request: NextRequest) => {
                     );
 
                 if (!validateMetadata.success) {
-                    return new HappinessError('Invalid metadata; assuming this is not a Happiness transaction and ignoring', 202, { metadata: invoice.metadata });
+                    throw new HappinessError('Invalid metadata; assuming this is not a Happiness transaction and ignoring', 202, { metadata: invoice.metadata });
                 }
 
                 const metadata = validateMetadata.data;
