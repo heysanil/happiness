@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import {
     generateCSS, theme,
 } from 'paris/theme';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { HappinessConfig } from 'happiness.config';
 import { Analytics } from '@vercel/analytics/react';
 import { Toast } from 'paris/toast';
@@ -38,6 +39,7 @@ export default function RootLayout({
             <body className="min-h-screen">
                 {children}
                 <Toast />
+                <SpeedInsights />
             </body>
             <Analytics />
         </html>
