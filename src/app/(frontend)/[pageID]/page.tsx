@@ -19,6 +19,8 @@ import { notFound } from 'next/navigation';
 
 dayjs.extend(relativeTime);
 
+export const revalidate = 60;
+
 export async function generateMetadata(
     { params }: { params: { pageID: string } },
     parent: ResolvingMetadata,
