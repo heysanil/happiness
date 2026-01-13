@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { clsx } from 'clsx';
-import styles from './Banner.module.scss';
+import styles from 'src/app/(frontend)/[pageID]/Banner.module.scss';
 
 export type BannerProps = {
     kind: 'image' | 'embed';

@@ -7,7 +7,7 @@ import { HappinessConfig } from 'happiness.config';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export const metadata: Metadata = {
     title: HappinessConfig.name,

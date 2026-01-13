@@ -10,7 +10,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { Toast } from 'paris/toast';
 import { Themer } from 'src/util/Themer';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export const metadata: Metadata = {
     title: HappinessConfig.name,
