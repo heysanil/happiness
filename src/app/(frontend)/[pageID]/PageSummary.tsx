@@ -16,15 +16,15 @@ export const PageSummary: FC<{
     embed = false,
 }) => (
     <div className="w-full flex flex-col gap-[20px]">
-        {(page.raised || page.raised === 0) && (
+        {!page.hideAmountRaised && (page.raised || page.raised === 0) && (
             <div className="flex flex-col gap-2">
                 <Text as="h2" kind="paragraphMedium">
                     <Text kind="headingXSmall">{formatCurrency(page.raised, 0, page.currency || 'usd')}</Text>
                     {' '}
                     raised
-                    {page.goal && (` of ${formatCurrency(page.goal, 0, page.currency || 'usd')} goal`)}
+                    {page.goal != null && page.goal > 0 && ` of ${formatCurrency(page.goal, 0, page.currency || 'usd')} goal`}
                 </Text>
-                {page.goal && (
+                {page.goal != null && page.goal > 0 && (
                     <div
                         className={`h-1 w-full rounded-full ${styles.bgSecondary}`}
                     >

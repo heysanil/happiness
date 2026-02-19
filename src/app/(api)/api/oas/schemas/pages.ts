@@ -98,6 +98,11 @@ export const PageProperties = (
         enum: ['usd'],
         nullable: true,
     },
+    hideAmountRaised: {
+        type: 'boolean',
+        description: 'When true, hides the raised amount and progress bar from the public page.',
+        default: false,
+    },
     ...readOnly ? timestamps : {},
 });
 
