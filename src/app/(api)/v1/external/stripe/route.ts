@@ -26,7 +26,78 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         const event = await stripe.webhooks.constructEventAsync(await request.text(), whSec, stripeWebhookSecret);
 
         switch (event.type) {
-            // We always create invoices for donations, so we can rely on the invoice events
+            // One-time donations via inline Payment Element create PaymentIntents directly
+            case 'payment_intent.succeeded': {
+                const pi = event.data.object as Stripe.PaymentIntent;
+
+                // Skip subscription-originated PIs — they're handled by invoice.paid
+                if (pi.invoice) {
+                    return new NextResponse(null, { status: 202 });
+                }
+
+                // Validate the metadata to ensure it's Happiness-created
+                const validatePiMetadata = await z
+                    .object({
+                        createdByHappiness: z.literal('true'),
+                        pageID: z.string(),
+                        donationID: z.string(),
+                        message: z.string().optional(),
+                        visible: z.string().optional(),
+                        tipAmount: z.string().optional(),
+                    })
+                    .passthrough()
+                    .spa(pi.metadata);
+
+                if (!validatePiMetadata.success) {
+                    // Not a Happiness transaction — ignore
+                    return new NextResponse(null, { status: 202 });
+                }
+
+                const piMeta = validatePiMetadata.data;
+
+                // Retrieve the charge with balance transaction for fee info
+                const piExpanded = await stripe.paymentIntents.retrieve(pi.id, {
+                    expand: ['latest_charge.balance_transaction', 'customer'],
+                });
+                const customer = piExpanded.customer as Stripe.Customer | null;
+                const charge = piExpanded.latest_charge as Stripe.Charge;
+                const balanceTx = charge.balance_transaction as Stripe.BalanceTransaction;
+
+                if (customer?.email) {
+                    await stripe.paymentIntents.update(pi.id, {
+                        receipt_email: customer.email,
+                    }).catch((e) => {
+                        console.error('Failed to update payment intent receipt email:', e);
+                    });
+                }
+
+                const piDonation = await upsertDonation(
+                    {
+                        id: piMeta.donationID,
+                        pageID: piMeta.pageID,
+                        message: piMeta.message,
+                        visible: piMeta.visible === 'true',
+                        amount: (piExpanded.amount_received - Number(piMeta.tipAmount || 0)),
+                        amountCurrency: piExpanded.currency,
+                        fee: balanceTx.fee,
+                        feeCurrency: balanceTx.currency,
+                        externalTransactionProvider: 'stripe',
+                        externalTransactionID: piExpanded.id,
+                        tipAmount: Number(piMeta.tipAmount || 0),
+                    },
+                    {
+                        firstName: customer?.name?.split(' ')[0] || 'Anonymous',
+                        lastName: customer?.name?.split(' ')[1] || 'Donor',
+                        email: customer?.email || null,
+                        phone: customer?.phone || null,
+                        anonymous: piMeta.visible !== 'true',
+                    },
+                );
+
+                return NextResponse.json(piDonation, { status: 201 });
+            }
+
+            // Subscriptions (monthly donations) still use invoice events
             case 'invoice.paid': {
                 const invoice = event.data.object as Stripe.Invoice;
 
@@ -97,7 +168,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         lastName: customer?.name?.split(' ')[1] || 'Donor',
                         email: customer.email,
                         phone: customer.phone || null,
-                        anonymous: metadata.visible === 'true',
+                        anonymous: metadata.visible !== 'true',
                     },
                 );
 
