@@ -1,18 +1,14 @@
 'use client';
 
 import {
-    useCallback, useEffect, useMemo, useState,
+    useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import {
     useSearchParams, useRouter,
 } from 'next/navigation';
 import {
-    Elements, ExpressCheckoutElement, useStripe, useElements,
+    Elements, useStripe, useElements,
 } from '@stripe/react-stripe-js';
-import type {
-    StripeExpressCheckoutElementConfirmEvent,
-    StripeExpressCheckoutElementReadyEvent,
-} from '@stripe/stripe-js';
 import { Button } from 'paris/button';
 import { Drawer } from 'paris/drawer';
 import { Text } from 'paris/text';
@@ -27,13 +23,24 @@ import { HappinessConfig } from 'happiness.config';
 import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
 import { stripePromise } from '@lib/stripe/client';
 import { CheckoutForm } from '@frontend/[pageID]/CheckoutForm';
+import { usePagination } from 'paris/pagination';
 
 import clsx from 'clsx';
 import styles from 'src/app/(frontend)/[pageID]/DonateButton.module.scss';
 
 export const AmountPresets = [1000, 2500, 5000, 10000, 25000] as number[];
 
-type DrawerView = 'details' | 'payment';
+const DrawerPages = ['details', 'payment'] as const;
+
+const STRIPE_APPEARANCE = {
+    theme: 'flat' as const,
+    labels: 'above' as const,
+    variables: {
+        borderRadius: '8px',
+        fontFamily: "'Graphik Web', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+        colorPrimary: '#131313',
+    },
+};
 
 const initialDonation: DonationConfig = {
     amount: 1000,
@@ -74,10 +81,12 @@ export const DonateButton = ({
 
     const [showOtherAmount, setShowOtherAmount] = useState(false);
     const [otherAmountInput, setOtherAmountInput] = useState('');
-    const [view, setView] = useState<DrawerView>('details');
+    const [paymentLoading, setPaymentLoading] = useState(false);
+
+    const pagination = usePagination<typeof DrawerPages>('details');
+    const checkoutFormRef = useRef<HTMLFormElement>(null);
 
     const total = useMemo(() => computeTotal(donation), [donation]);
-
     const elementsMode = donation.frequency === 'Monthly' ? 'subscription' : 'payment';
 
     useEffect(() => {
@@ -95,14 +104,43 @@ export const DonateButton = ({
         });
         setShowOtherAmount(false);
         setOtherAmountInput('');
-        setView('details');
-    }, [projectName, pageID]);
+        pagination.reset();
+    }, [projectName, pageID, pagination]);
 
     const handleSuccess = useCallback(() => {
         const name = donation.anonymous ? 'Anonymous' : 'Donor';
         handleClose();
         router.replace(`/${pageID}?thanks=${encodeURIComponent(name)}`);
     }, [handleClose, donation.anonymous, pageID, router]);
+
+    const estFee = useMemo(() => estimateFee(donation.amount), [donation.amount]);
+
+    const bottomPanel = useMemo(() => {
+        if (pagination.currentPage === 'details') {
+            return (
+                <Button
+                    onClick={() => pagination.open('payment')}
+                    disabled={donation.amount === 0}
+                    style={{ width: '100%' }}
+                >
+                    {`Continue to Payment \u2014 ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
+                </Button>
+            );
+        }
+        return (
+            <Button
+                onClick={() => {
+                    checkoutFormRef.current?.requestSubmit();
+                }}
+                disabled={paymentLoading}
+                style={{ width: '100%' }}
+            >
+                {paymentLoading
+                    ? 'Processing...'
+                    : `Donate ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
+            </Button>
+        );
+    }, [pagination, donation.amount, donation.frequency, total, paymentLoading]);
 
     return (
         <>
@@ -113,9 +151,11 @@ export const DonateButton = ({
                 Donate
             </Button>
             <Drawer
-                title={view === 'payment' ? 'Payment' : 'Donate'}
+                title="Donate"
                 isOpen={drawerOpen}
                 onClose={() => handleClose()}
+                pagination={pagination}
+                bottomPanel={bottomPanel}
             >
                 <Elements
                     key={`${elementsMode}-${donation.frequency}`}
@@ -124,26 +164,23 @@ export const DonateButton = ({
                         mode: elementsMode,
                         amount: Math.max(total, 50),
                         currency: 'usd',
-                        appearance: {
-                            theme: 'stripe',
-                            variables: {
-                                borderRadius: '8px',
-                            },
-                        },
+                        appearance: STRIPE_APPEARANCE,
                     }}
                 >
                     {/* eslint-disable-next-line @typescript-eslint/no-use-before-define */}
-                    <DonateDrawerContent
+                    <DonateDrawerInner
                         donation={donation}
                         setDonation={setDonation}
                         showOtherAmount={showOtherAmount}
                         setShowOtherAmount={setShowOtherAmount}
                         otherAmountInput={otherAmountInput}
                         setOtherAmountInput={setOtherAmountInput}
-                        view={view}
-                        setView={setView}
                         total={total}
+                        estFee={estFee}
                         onSuccess={handleSuccess}
+                        checkoutFormRef={checkoutFormRef}
+                        setPaymentLoading={setPaymentLoading}
+                        currentPage={pagination.currentPage}
                     />
                 </Elements>
             </Drawer>
@@ -152,20 +189,27 @@ export const DonateButton = ({
 };
 
 /**
- * Inner component that renders inside <Elements>.
- * Needed because useStripe/useElements can only be called within the Elements provider.
+ * Inner component rendered inside <Elements>.
+ * Since the Drawer with pagination expects keyed children, but we need
+ * useStripe/useElements hooks, we render inside Elements and output
+ * the keyed page divs directly for the Drawer's pagination to pick up.
+ *
+ * NOTE: The Drawer matches children by their React `key` prop against
+ * pagination.currentPage. We return a flat array of keyed divs.
  */
-const DonateDrawerContent = ({
+const DonateDrawerInner = ({
     donation,
     setDonation,
     showOtherAmount,
     setShowOtherAmount,
     otherAmountInput,
     setOtherAmountInput,
-    view,
-    setView,
     total,
+    estFee,
     onSuccess,
+    checkoutFormRef,
+    setPaymentLoading,
+    currentPage,
 }: {
     donation: DonationConfig;
     setDonation: React.Dispatch<React.SetStateAction<DonationConfig>>;
@@ -173,20 +217,14 @@ const DonateDrawerContent = ({
     setShowOtherAmount: (v: boolean) => void;
     otherAmountInput: string;
     setOtherAmountInput: (v: string) => void;
-    view: DrawerView;
-    setView: (v: DrawerView) => void;
     total: number;
+    estFee: number;
     onSuccess: () => void;
+    checkoutFormRef: React.RefObject<HTMLFormElement | null>;
+    setPaymentLoading: (v: boolean) => void;
+    currentPage: string;
 }) => {
-    const stripe = useStripe();
     const elements = useElements();
-
-    const [expressCheckoutReady, setExpressCheckoutReady] = useState(false);
-    const [expressError, setExpressError] = useState<string | null>(null);
-    const [expressLoading, setExpressLoading] = useState(false);
-
-    const estFee = useMemo(() => estimateFee(donation.amount), [donation.amount]);
-    const feeAmount = donation.coverFees ? estFee : 0;
 
     // Keep Elements amount in sync with donation total
     useEffect(() => {
@@ -204,73 +242,9 @@ const DonateDrawerContent = ({
         [],
     );
 
-    const createIntentAndConfirm = useCallback(async () => {
-        if (!stripe || !elements) return;
-
-        const { error: submitError } = await elements.submit();
-        if (submitError) {
-            throw new Error(submitError.message ?? 'Validation failed');
-        }
-
-        const res = await fetch('/v1/donations/create-intent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...donation,
-                amount: donation.amount + feeAmount,
-            }),
-        });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => null);
-            throw new Error(data?.message ?? 'Failed to create payment');
-        }
-
-        const { clientSecret } = await res.json();
-
-        const { error: confirmError } = await stripe.confirmPayment({
-            elements,
-            clientSecret,
-            confirmParams: {
-                return_url: returnUrl,
-            },
-            redirect: 'if_required',
-        });
-
-        if (confirmError) {
-            throw new Error(confirmError.message ?? 'Payment failed');
-        }
-
-        onSuccess();
-    }, [stripe, elements, donation, feeAmount, returnUrl, onSuccess]);
-
-    const handleExpressCheckoutConfirm = useCallback(async (
-        event: StripeExpressCheckoutElementConfirmEvent,
-    ) => {
-        setExpressLoading(true);
-        setExpressError(null);
-        try {
-            await createIntentAndConfirm();
-        } catch (e) {
-            event.paymentFailed({ reason: 'fail' });
-            setExpressError(e instanceof Error ? e.message : 'Payment failed');
-        } finally {
-            setExpressLoading(false);
-        }
-    }, [createIntentAndConfirm]);
-
-    const handleExpressCheckoutReady = useCallback((
-        event: StripeExpressCheckoutElementReadyEvent,
-    ) => {
-        const methods = event.availablePaymentMethods;
-        setExpressCheckoutReady(
-            Boolean(methods && (methods.applePay || methods.googlePay || methods.link)),
-        );
-    }, []);
-
     return (
         <>
-            {view === 'details' && (
+            {currentPage === 'details' && (
                 <div className="w-full flex flex-col gap-6">
                     <ButtonGroup
                         options={FrequencyOptions.map((f) => ({ id: f, name: f }))}
@@ -461,74 +435,17 @@ const DonateDrawerContent = ({
                             </div>
                         ) : null}
                     </div>
-
-                    {/* Express Checkout (Apple Pay, Google Pay, Link) */}
-                    {expressCheckoutReady && donation.amount > 0 && (
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-3">
-                                <div className="flex-1 h-px bg-gray-200" />
-                                <Text kind="paragraphXSmall" style={{ color: '#6b7280' }}>
-                                    Express checkout
-                                </Text>
-                                <div className="flex-1 h-px bg-gray-200" />
-                            </div>
-                            <ExpressCheckoutElement
-                                onConfirm={handleExpressCheckoutConfirm}
-                                onReady={handleExpressCheckoutReady}
-                                options={{
-                                    buttonType: {
-                                        applePay: 'donate',
-                                        googlePay: 'donate',
-                                    },
-                                }}
-                            />
-                            {expressError && (
-                                <Text kind="paragraphXSmall" style={{ color: 'var(--error-color, #dc2626)' }}>
-                                    {expressError}
-                                </Text>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Hidden Express Checkout to detect availability */}
-                    {!expressCheckoutReady && (
-                        <div style={{
-                            position: 'absolute',
-                            opacity: 0,
-                            pointerEvents: 'none',
-                            height: 0,
-                            overflow: 'hidden',
-                        }}
-                        >
-                            <ExpressCheckoutElement
-                                onReady={handleExpressCheckoutReady}
-                                onConfirm={handleExpressCheckoutConfirm}
-                            />
-                        </div>
-                    )}
-
-                    <Button
-                        onClick={() => setView('payment')}
-                        disabled={donation.amount === 0 || expressLoading}
-                    >
-                        {`Continue to Payment \u2014 ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
-                    </Button>
                 </div>
             )}
 
-            {view === 'payment' && (
-                <div className="w-full flex flex-col gap-4">
-                    <Button
-                        kind="tertiary"
-                        size="small"
-                        onClick={() => setView('details')}
-                    >
-                        &larr; Back to details
-                    </Button>
+            {currentPage === 'payment' && (
+                <div className="w-full">
                     <CheckoutForm
+                        ref={checkoutFormRef as React.Ref<HTMLFormElement>}
                         donation={donation}
                         onSuccess={onSuccess}
                         returnUrl={returnUrl}
+                        onLoadingChange={setPaymentLoading}
                     />
                 </div>
             )}
