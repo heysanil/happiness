@@ -27,14 +27,13 @@ import { HappinessConfig } from 'happiness.config';
 import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
 import { stripePromise } from '@lib/stripe/client';
 import { CheckoutForm } from '@frontend/[pageID]/CheckoutForm';
-import { usePagination } from 'paris/pagination';
 
 import clsx from 'clsx';
 import styles from 'src/app/(frontend)/[pageID]/DonateButton.module.scss';
 
 export const AmountPresets = [1000, 2500, 5000, 10000, 25000] as number[];
 
-const DrawerPages = ['details', 'payment'] as const;
+type DrawerView = 'details' | 'payment';
 
 const initialDonation: DonationConfig = {
     amount: 1000,
@@ -75,8 +74,7 @@ export const DonateButton = ({
 
     const [showOtherAmount, setShowOtherAmount] = useState(false);
     const [otherAmountInput, setOtherAmountInput] = useState('');
-
-    const pagination = usePagination<typeof DrawerPages>('details');
+    const [view, setView] = useState<DrawerView>('details');
 
     const total = useMemo(() => computeTotal(donation), [donation]);
 
@@ -97,13 +95,12 @@ export const DonateButton = ({
         });
         setShowOtherAmount(false);
         setOtherAmountInput('');
-        pagination.reset();
-    }, [projectName, pageID, pagination]);
+        setView('details');
+    }, [projectName, pageID]);
 
     const handleSuccess = useCallback(() => {
         const name = donation.anonymous ? 'Anonymous' : 'Donor';
         handleClose();
-        // Trigger ThanksDialog via URL param using router for SPA navigation
         router.replace(`/${pageID}?thanks=${encodeURIComponent(name)}`);
     }, [handleClose, donation.anonymous, pageID, router]);
 
@@ -121,7 +118,7 @@ export const DonateButton = ({
                     stripe={stripePromise}
                     options={{
                         mode: elementsMode,
-                        amount: Math.max(total, 50), // Stripe minimum is $0.50
+                        amount: Math.max(total, 50),
                         currency: 'usd',
                         appearance: {
                             theme: 'stripe',
@@ -141,11 +138,10 @@ export const DonateButton = ({
                         setShowOtherAmount={setShowOtherAmount}
                         otherAmountInput={otherAmountInput}
                         setOtherAmountInput={setOtherAmountInput}
-                        pagination={pagination}
+                        view={view}
+                        setView={setView}
                         total={total}
                         onSuccess={handleSuccess}
-                        pageID={pageID}
-                        projectName={projectName}
                     />
                 </Elements>
             )}
@@ -155,7 +151,7 @@ export const DonateButton = ({
 
 /**
  * Inner component that renders inside <Elements>.
- * This is needed because useStripe/useElements can only be called within the Elements provider.
+ * Needed because useStripe/useElements can only be called within the Elements provider.
  */
 const DonateDrawerContent = ({
     drawerOpen,
@@ -166,11 +162,10 @@ const DonateDrawerContent = ({
     setShowOtherAmount,
     otherAmountInput,
     setOtherAmountInput,
-    pagination,
+    view,
+    setView,
     total,
     onSuccess,
-    pageID,
-    projectName,
 }: {
     drawerOpen: boolean;
     onClose: () => void;
@@ -180,11 +175,10 @@ const DonateDrawerContent = ({
     setShowOtherAmount: (v: boolean) => void;
     otherAmountInput: string;
     setOtherAmountInput: (v: string) => void;
-    pagination: ReturnType<typeof usePagination<typeof DrawerPages>>;
+    view: DrawerView;
+    setView: (v: DrawerView) => void;
     total: number;
     onSuccess: () => void;
-    pageID?: string;
-    projectName?: string;
 }) => {
     const stripe = useStripe();
     const elements = useElements();
@@ -205,20 +199,21 @@ const DonateDrawerContent = ({
         }
     }, [elements, total]);
 
-    const returnUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/v1/donations/checkout/success`
-        : '';
+    const returnUrl = useMemo(
+        () => (typeof window !== 'undefined'
+            ? `${window.location.origin}/v1/donations/checkout/success`
+            : ''),
+        [],
+    );
 
     const createIntentAndConfirm = useCallback(async () => {
         if (!stripe || !elements) return;
 
-        // Submit to validate
         const { error: submitError } = await elements.submit();
         if (submitError) {
             throw new Error(submitError.message ?? 'Validation failed');
         }
 
-        // Create intent on server
         const res = await fetch('/v1/donations/create-intent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -235,7 +230,6 @@ const DonateDrawerContent = ({
 
         const { clientSecret } = await res.json();
 
-        // Confirm payment
         const { error: confirmError } = await stripe.confirmPayment({
             elements,
             clientSecret,
@@ -249,7 +243,6 @@ const DonateDrawerContent = ({
             throw new Error(confirmError.message ?? 'Payment failed');
         }
 
-        // Success
         onSuccess();
     }, [stripe, elements, donation, feeAmount, returnUrl, onSuccess]);
 
@@ -261,7 +254,6 @@ const DonateDrawerContent = ({
         try {
             await createIntentAndConfirm();
         } catch (e) {
-            // Dismiss the payment sheet with an error
             event.paymentFailed({ reason: 'fail' });
             setExpressError(e instanceof Error ? e.message : 'Payment failed');
         } finally {
@@ -280,264 +272,272 @@ const DonateDrawerContent = ({
 
     return (
         <Drawer
-            title="Donate"
+            title={view === 'payment' ? 'Payment' : 'Donate'}
             isOpen={drawerOpen}
             onClose={onClose}
-            pagination={pagination}
         >
-            {/* Page 1: Donation Details + Express Checkout */}
-            <div key="details" className="w-full flex flex-col gap-6">
-                <ButtonGroup
-                    options={FrequencyOptions.map((f) => ({ id: f, name: f }))}
-                    selected={donation.frequency}
-                    onChange={({ id }) => {
-                        setDonation((d) => ({
-                            ...d,
-                            frequency: id as DonationConfig['frequency'],
-                        }));
-                    }}
-                />
-                <div className="flex flex-col gap-2">
-                    <div className="grid grid-cols-3 gap-2">
-                        {AmountPresets.map((amount) => (
+            {view === 'details' && (
+                <div className="w-full flex flex-col gap-6">
+                    <ButtonGroup
+                        options={FrequencyOptions.map((f) => ({ id: f, name: f }))}
+                        selected={donation.frequency}
+                        onChange={({ id }) => {
+                            setDonation((d) => ({
+                                ...d,
+                                frequency: id as DonationConfig['frequency'],
+                            }));
+                        }}
+                    />
+                    <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-3 gap-2">
+                            {AmountPresets.map((amount) => (
+                                <DonationAmountSelector
+                                    selected={donation.amount === amount}
+                                    key={amount}
+                                    onClick={() => {
+                                        setDonation((d) => ({
+                                            ...d,
+                                            amount,
+                                        }));
+                                        setShowOtherAmount(false);
+                                    }}
+                                >
+                                    <Text
+                                        kind="paragraphSmall"
+                                        style={{ fontWeight: 500 }}
+                                    >
+                                        {formatCurrency(amount, 0)}
+                                    </Text>
+                                </DonationAmountSelector>
+                            ))}
                             <DonationAmountSelector
-                                selected={donation.amount === amount}
-                                key={amount}
+                                selected={!AmountPresets.includes(donation.amount)}
+                                key="otherAmount"
                                 onClick={() => {
                                     setDonation((d) => ({
                                         ...d,
-                                        amount,
+                                        amount: 0,
                                     }));
-                                    setShowOtherAmount(false);
+                                    setOtherAmountInput('');
+                                    setShowOtherAmount(true);
                                 }}
                             >
                                 <Text
                                     kind="paragraphSmall"
                                     style={{ fontWeight: 500 }}
                                 >
-                                    {formatCurrency(amount, 0)}
+                                    Other
                                 </Text>
                             </DonationAmountSelector>
-                        ))}
-                        <DonationAmountSelector
-                            selected={!AmountPresets.includes(donation.amount)}
-                            key="otherAmount"
-                            onClick={() => {
-                                setDonation((d) => ({
-                                    ...d,
-                                    amount: 0,
-                                }));
-                                setOtherAmountInput('');
-                                setShowOtherAmount(true);
+                        </div>
+                        <div
+                            className="overflow-clip"
+                            style={{
+                                transition: 'all 0.2s ease-in-out',
+                                maxHeight: showOtherAmount ? '40px' : 0,
+                                marginBottom: showOtherAmount ? '0px' : '-8px',
                             }}
                         >
-                            <Text
-                                kind="paragraphSmall"
-                                style={{ fontWeight: 500 }}
-                            >
-                                Other
-                            </Text>
-                        </DonationAmountSelector>
+                            <Input
+                                label="Other amount"
+                                hideLabel
+                                placeholder="Enter amount"
+                                type="text"
+                                value={otherAmountInput}
+                                startEnhancer="$"
+                                onChange={(e) => {
+                                    const { value } = e.target;
+                                    if (/^[0-9]+(\.[0-9]{0,2}|)$/.test(value) || value === '') {
+                                        setOtherAmountInput(value);
+                                        setDonation((d) => ({
+                                            ...d,
+                                            amount: Number(value) * 100,
+                                        }));
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
-                    <div
-                        className="overflow-clip"
-                        style={{
-                            transition: 'all 0.2s ease-in-out',
-                            maxHeight: showOtherAmount ? '40px' : 0,
-                            marginBottom: showOtherAmount ? '0px' : '-8px',
+                    <TextArea
+                        label={(
+                            <div>
+                                <Text
+                                    kind="paragraphSmall"
+                                    style={{ fontWeight: 500 }}
+                                >
+                                    Message
+                                </Text>
+                                {' '}
+                                <Text kind="paragraphSmall">
+                                    (optional)
+                                </Text>
+                            </div>
+                        )}
+                        placeholder="Keep up the good work!"
+                        value={donation.message}
+                        style={{ minHeight: '80px' }}
+                        onChange={(e) => {
+                            const { value } = e.target;
+                            setDonation((d) => ({
+                                ...d,
+                                message: value,
+                            }));
                         }}
-                    >
-                        <Input
-                            label="Other amount"
-                            hideLabel
-                            placeholder="Enter amount"
-                            type="text"
-                            value={otherAmountInput}
-                            startEnhancer="$"
+                    />
+                    <div className={clsx(styles.TempCheckboxSpacing)}>
+                        <Checkbox
+                            checked={donation.coverFees}
                             onChange={(e) => {
-                                const { value } = e.target;
-                                if (/^[0-9]+(\.[0-9]{0,2}|)$/.test(value) || value === '') {
-                                    setOtherAmountInput(value);
-                                    setDonation((d) => ({
-                                        ...d,
-                                        amount: Number(value) * 100,
-                                    }));
-                                }
+                                setDonation((d) => ({
+                                    ...d,
+                                    coverFees: Boolean(e),
+                                }));
                             }}
-                        />
+                        >
+                            <Text kind="paragraphXSmall">
+                                Add
+                                {' '}
+                                <strong>
+                                    {formatCurrency(estFee, 2)}
+                                </strong>
+                                {' '}
+                                to cover processing fees
+                            </Text>
+                        </Checkbox>
                     </div>
-                </div>
-                <TextArea
-                    label={(
-                        <div>
-                            <Text
-                                kind="paragraphSmall"
-                                style={{ fontWeight: 500 }}
-                            >
-                                Message
+                    <div className={clsx(styles.TempCheckboxSpacing)}>
+                        <Checkbox
+                            checked={donation.anonymous}
+                            onChange={(e) => {
+                                setDonation((d) => ({
+                                    ...d,
+                                    anonymous: Boolean(e),
+                                }));
+                            }}
+                        >
+                            <Text kind="paragraphXSmall">
+                                Make my donation anonymous
                             </Text>
-                            {' '}
-                            <Text kind="paragraphSmall">
-                                (optional)
+                        </Checkbox>
+                    </div>
+                    <div className={clsx(styles.TempCheckboxSpacing)}>
+                        <Checkbox
+                            checked={donation.tipPercent !== 0}
+                            onChange={(e) => {
+                                setDonation((d) => ({
+                                    ...d,
+                                    tipPercent: e ? 0.05 : 0,
+                                }));
+                            }}
+                        >
+                            <Text kind="paragraphXSmall">
+                                Add a tip for
+                                {' '}
+                                {HappinessConfig.name}
                             </Text>
+                        </Checkbox>
+                        {donation.tipPercent !== 0 ? (
+                            <div className="flex flex-col mt-4 gap-4">
+                                <Text kind="paragraphXSmall">
+                                    {HappinessConfig.tipDescription}
+                                </Text>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[0.05, 0.1, 0.2].map((pct) => (
+                                        <DonationAmountSelector
+                                            key={`tip-${pct}`}
+                                            size="small"
+                                            selected={donation.tipPercent === pct}
+                                            onClick={() => {
+                                                setDonation((d) => ({
+                                                    ...d,
+                                                    tipPercent: pct,
+                                                }));
+                                            }}
+                                        >
+                                            <Text
+                                                kind="paragraphXSmall"
+                                                style={{ fontWeight: 500 }}
+                                            >
+                                                {pct * 100}
+                                                %
+                                            </Text>
+                                        </DonationAmountSelector>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+
+                    {/* Express Checkout (Apple Pay, Google Pay, Link) */}
+                    {expressCheckoutReady && donation.amount > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-px bg-gray-200" />
+                                <Text kind="paragraphXSmall" style={{ color: '#6b7280' }}>
+                                    Express checkout
+                                </Text>
+                                <div className="flex-1 h-px bg-gray-200" />
+                            </div>
+                            <ExpressCheckoutElement
+                                onConfirm={handleExpressCheckoutConfirm}
+                                onReady={handleExpressCheckoutReady}
+                                options={{
+                                    buttonType: {
+                                        applePay: 'donate',
+                                        googlePay: 'donate',
+                                    },
+                                }}
+                            />
+                            {expressError && (
+                                <Text kind="paragraphXSmall" style={{ color: 'var(--error-color, #dc2626)' }}>
+                                    {expressError}
+                                </Text>
+                            )}
                         </div>
                     )}
-                    placeholder="Keep up the good work!"
-                    value={donation.message}
-                    style={{ minHeight: '80px' }}
-                    onChange={(e) => {
-                        const { value } = e.target;
-                        setDonation((d) => ({
-                            ...d,
-                            message: value,
-                        }));
-                    }}
-                />
-                <div className={clsx(styles.TempCheckboxSpacing)}>
-                    <Checkbox
-                        checked={donation.coverFees}
-                        onChange={(e) => {
-                            setDonation((d) => ({
-                                ...d,
-                                coverFees: Boolean(e),
-                            }));
+
+                    {/* Hidden Express Checkout to detect availability */}
+                    {!expressCheckoutReady && (
+                        <div style={{
+                            position: 'absolute',
+                            opacity: 0,
+                            pointerEvents: 'none',
+                            height: 0,
+                            overflow: 'hidden',
                         }}
-                    >
-                        <Text kind="paragraphXSmall">
-                            Add
-                            {' '}
-                            <strong>
-                                {formatCurrency(estFee, 2)}
-                            </strong>
-                            {' '}
-                            to cover processing fees
-                        </Text>
-                    </Checkbox>
-                </div>
-                <div className={clsx(styles.TempCheckboxSpacing)}>
-                    <Checkbox
-                        checked={donation.anonymous}
-                        onChange={(e) => {
-                            setDonation((d) => ({
-                                ...d,
-                                anonymous: Boolean(e),
-                            }));
-                        }}
-                    >
-                        <Text kind="paragraphXSmall">
-                            Make my donation anonymous
-                        </Text>
-                    </Checkbox>
-                </div>
-                <div className={clsx(styles.TempCheckboxSpacing)}>
-                    <Checkbox
-                        checked={donation.tipPercent !== 0}
-                        onChange={(e) => {
-                            setDonation((d) => ({
-                                ...d,
-                                tipPercent: e ? 0.05 : 0,
-                            }));
-                        }}
-                    >
-                        <Text kind="paragraphXSmall">
-                            Add a tip for
-                            {' '}
-                            {HappinessConfig.name}
-                        </Text>
-                    </Checkbox>
-                    {donation.tipPercent !== 0 ? (
-                        <div className="flex flex-col mt-4 gap-4">
-                            <Text kind="paragraphXSmall">
-                                {HappinessConfig.tipDescription}
-                            </Text>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[0.05, 0.1, 0.2].map((pct) => (
-                                    <DonationAmountSelector
-                                        key={`tip-${pct}`}
-                                        size="small"
-                                        selected={donation.tipPercent === pct}
-                                        onClick={() => {
-                                            setDonation((d) => ({
-                                                ...d,
-                                                tipPercent: pct,
-                                            }));
-                                        }}
-                                    >
-                                        <Text
-                                            kind="paragraphXSmall"
-                                            style={{ fontWeight: 500 }}
-                                        >
-                                            {pct * 100}
-                                            %
-                                        </Text>
-                                    </DonationAmountSelector>
-                                ))}
-                            </div>
+                        >
+                            <ExpressCheckoutElement
+                                onReady={handleExpressCheckoutReady}
+                                onConfirm={handleExpressCheckoutConfirm}
+                            />
                         </div>
-                    ) : null}
-                </div>
+                    )}
 
-                {/* Express Checkout (Apple Pay, Google Pay, Link) */}
-                {expressCheckoutReady && donation.amount > 0 && (
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 h-px bg-gray-200" />
-                            <Text kind="paragraphXSmall" style={{ color: '#6b7280' }}>
-                                Express checkout
-                            </Text>
-                            <div className="flex-1 h-px bg-gray-200" />
-                        </div>
-                        <ExpressCheckoutElement
-                            onConfirm={handleExpressCheckoutConfirm}
-                            onReady={handleExpressCheckoutReady}
-                            options={{
-                                buttonType: {
-                                    applePay: 'donate',
-                                    googlePay: 'donate',
-                                },
-                            }}
-                        />
-                        {expressError && (
-                            <Text kind="paragraphXSmall" style={{ color: 'var(--error-color, #dc2626)' }}>
-                                {expressError}
-                            </Text>
-                        )}
-                    </div>
-                )}
-
-                {/* Hidden Express Checkout to detect availability */}
-                {!expressCheckoutReady && (
-                    <div style={{
-                        position: 'absolute',
-                        opacity: 0,
-                        pointerEvents: 'none',
-                        height: 0,
-                        overflow: 'hidden',
-                    }}
+                    <Button
+                        onClick={() => setView('payment')}
+                        disabled={donation.amount === 0 || expressLoading}
                     >
-                        <ExpressCheckoutElement
-                            onReady={handleExpressCheckoutReady}
-                            onConfirm={handleExpressCheckoutConfirm}
-                        />
-                    </div>
-                )}
+                        {`Continue to Payment \u2014 ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
+                    </Button>
+                </div>
+            )}
 
-                <Button
-                    onClick={() => pagination.open('payment')}
-                    disabled={donation.amount === 0 || expressLoading}
-                >
-                    {`Continue to Payment \u2014 ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
-                </Button>
-            </div>
-
-            {/* Page 2: Payment Element */}
-            <div key="payment" className="w-full">
-                <CheckoutForm
-                    donation={donation}
-                    onSuccess={onSuccess}
-                    returnUrl={returnUrl}
-                />
-            </div>
+            {view === 'payment' && (
+                <div className="w-full flex flex-col gap-4">
+                    <Button
+                        kind="tertiary"
+                        size="small"
+                        onClick={() => setView('details')}
+                    >
+                        &larr; Back to details
+                    </Button>
+                    <CheckoutForm
+                        donation={donation}
+                        onSuccess={onSuccess}
+                        returnUrl={returnUrl}
+                    />
+                </div>
+            )}
         </Drawer>
     );
 };
