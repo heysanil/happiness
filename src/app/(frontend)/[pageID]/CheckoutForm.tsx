@@ -104,7 +104,9 @@ export const CheckoutForm = ({
                     )}
                     {tipAmount > 0 && (
                         <div className="flex justify-between">
-                            <Text kind="paragraphXSmall">Tip ({donation.tipPercent * 100}%)</Text>
+                            <Text kind="paragraphXSmall">
+                                {`Tip (${donation.tipPercent * 100}%)`}
+                            </Text>
                             <Text kind="paragraphXSmall">{formatCurrency(tipAmount, 2)}</Text>
                         </div>
                     )}

@@ -1,9 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Elements, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import type { StripeExpressCheckoutElementConfirmEvent, StripeExpressCheckoutElementReadyEvent } from '@stripe/stripe-js';
+import {
+    useCallback, useEffect, useMemo, useState,
+} from 'react';
+import {
+    useSearchParams, useRouter,
+} from 'next/navigation';
+import {
+    Elements, ExpressCheckoutElement, useStripe, useElements,
+} from '@stripe/react-stripe-js';
+import type {
+    StripeExpressCheckoutElementConfirmEvent,
+    StripeExpressCheckoutElementReadyEvent,
+} from '@stripe/stripe-js';
 import { Button } from 'paris/button';
 import { Drawer } from 'paris/drawer';
 import { Text } from 'paris/text';
@@ -122,6 +131,7 @@ export const DonateButton = ({
                         },
                     }}
                 >
+                    {/* eslint-disable-next-line @typescript-eslint/no-use-before-define */}
                     <DonateDrawerContent
                         drawerOpen={drawerOpen}
                         onClose={handleClose}
@@ -497,7 +507,14 @@ const DonateDrawerContent = ({
 
                 {/* Hidden Express Checkout to detect availability */}
                 {!expressCheckoutReady && (
-                    <div style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }}>
+                    <div style={{
+                        position: 'absolute',
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        height: 0,
+                        overflow: 'hidden',
+                    }}
+                    >
                         <ExpressCheckoutElement
                             onReady={handleExpressCheckoutReady}
                             onConfirm={handleExpressCheckoutConfirm}
