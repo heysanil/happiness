@@ -112,7 +112,11 @@ export const DonateButton = ({
             >
                 Donate
             </Button>
-            {drawerOpen && (
+            <Drawer
+                title={view === 'payment' ? 'Payment' : 'Donate'}
+                isOpen={drawerOpen}
+                onClose={() => handleClose()}
+            >
                 <Elements
                     key={`${elementsMode}-${donation.frequency}`}
                     stripe={stripePromise}
@@ -130,8 +134,6 @@ export const DonateButton = ({
                 >
                     {/* eslint-disable-next-line @typescript-eslint/no-use-before-define */}
                     <DonateDrawerContent
-                        drawerOpen={drawerOpen}
-                        onClose={handleClose}
                         donation={donation}
                         setDonation={setDonation}
                         showOtherAmount={showOtherAmount}
@@ -144,7 +146,7 @@ export const DonateButton = ({
                         onSuccess={handleSuccess}
                     />
                 </Elements>
-            )}
+            </Drawer>
         </>
     );
 };
@@ -154,8 +156,6 @@ export const DonateButton = ({
  * Needed because useStripe/useElements can only be called within the Elements provider.
  */
 const DonateDrawerContent = ({
-    drawerOpen,
-    onClose,
     donation,
     setDonation,
     showOtherAmount,
@@ -167,8 +167,6 @@ const DonateDrawerContent = ({
     total,
     onSuccess,
 }: {
-    drawerOpen: boolean;
-    onClose: () => void;
     donation: DonationConfig;
     setDonation: React.Dispatch<React.SetStateAction<DonationConfig>>;
     showOtherAmount: boolean;
@@ -271,11 +269,7 @@ const DonateDrawerContent = ({
     }, []);
 
     return (
-        <Drawer
-            title={view === 'payment' ? 'Payment' : 'Donate'}
-            isOpen={drawerOpen}
-            onClose={onClose}
-        >
+        <>
             {view === 'details' && (
                 <div className="w-full flex flex-col gap-6">
                     <ButtonGroup
@@ -538,6 +532,6 @@ const DonateDrawerContent = ({
                     />
                 </div>
             )}
-        </Drawer>
+        </>
     );
 };
