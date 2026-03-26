@@ -73,6 +73,22 @@ export const upsertDonation = async (
             });
         }
 
+        // If the donation already exists and has been refunded, skip the update
+        if (validated.id) {
+            const existing = await tx.query.donations.findFirst({
+                where: eq(donations.id, validated.id),
+                columns: { refunded: true },
+            });
+            if (existing?.refunded) {
+                try {
+                    tx.rollback();
+                } catch (e) {
+                    // Graceful catch so we can throw a more helpful error
+                }
+                throw new HappinessError('Donation has been refunded and cannot be updated', 409, { id: validated.id });
+            }
+        }
+
         const donationData = {
             ...validated,
             donorID: donorData.id,
