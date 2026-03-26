@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { selectPageSchema, pages, donations } from '@db/schema';
 import { db } from '@db/init';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { HappinessError } from 'src/util/HappinessError';
 import { validateReturn } from '@db/ops/shared';
 import { Prefixes } from 'src/util/generateID';
@@ -26,7 +26,7 @@ export const getPage = async (search: string): Promise<z.infer<typeof selectPage
             raised: sql<number>`sum(${donations.amount})`,
         })
         .from(donations)
-        .where(eq(donations.pageID, query.id));
+        .where(and(eq(donations.pageID, query.id), eq(donations.refunded, false)));
 
     return validateReturn(selectPageSchema, {
         ...query,

@@ -52,6 +52,7 @@ export const DonationsColumns = {
     message: text('message'),
     externalTransactionProvider: mysqlEnum('external_transaction_provider', ['stripe']),
     externalTransactionID: varchar('external_transaction_id', { length: 255 }).unique(),
+    refunded: boolean('refunded').notNull().default(false),
 } as const;
 
 export const donations = mysqlTable('donations', DonationsColumns);

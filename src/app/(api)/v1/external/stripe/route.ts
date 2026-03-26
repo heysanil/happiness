@@ -7,6 +7,9 @@ import type Stripe from 'stripe';
 import { z } from 'zod';
 import { generateID, Prefixes } from 'src/util/generateID';
 import { upsertDonation } from '@db/ops/donations/upsertDonation';
+import { db } from '@db/init';
+import { donations } from '@db/schema';
+import { eq } from 'drizzle-orm';
 
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 if (!stripeWebhookSecret) throw new Error('Missing STRIPE_WEBHOOK_SECRET. Please add it to your environment.');
@@ -99,6 +102,23 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 );
 
                 return NextResponse.json(donation, { status: 201 });
+            }
+            case 'charge.refunded': {
+                const charge = event.data.object as Stripe.Charge;
+                const paymentIntentID = typeof charge.payment_intent === 'string'
+                    ? charge.payment_intent
+                    : charge.payment_intent?.id;
+
+                if (!paymentIntentID) {
+                    throw new HappinessError('Refund event missing payment_intent', 400, { charge: charge.id });
+                }
+
+                // Mark the donation as refunded by its external transaction ID
+                const result = await db.update(donations)
+                    .set({ refunded: true })
+                    .where(eq(donations.externalTransactionID, paymentIntentID));
+
+                return NextResponse.json({ refunded: paymentIntentID }, { status: 200 });
             }
             default: {
                 // Unexpected event type, log and ignore it
