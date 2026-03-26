@@ -34,52 +34,53 @@ export const POST = async (
         const refundCutoff = new Date();
         refundCutoff.setDate(refundCutoff.getDate() - STRIPE_REFUND_WINDOW_DAYS);
 
-        const results: {
-            refunded: string[];
-            skippedAlreadyRefunded: string[];
-            skippedNoTransaction: string[];
-            skippedTooOld: string[];
-            failed: { id: string; error: string }[];
-            totalRefundedAmount: number;
-        } = {
-            refunded: [],
-            skippedAlreadyRefunded: [],
-            skippedNoTransaction: [],
-            skippedTooOld: [],
-            failed: [],
-            totalRefundedAmount: 0,
-        };
+        const skippedAlreadyRefunded = allDonations
+            .filter((d) => d.refunded)
+            .map((d) => d.id);
 
-        for (const donation of allDonations) {
-            if (donation.refunded) {
-                results.skippedAlreadyRefunded.push(donation.id);
-                continue;
-            }
+        const skippedNoTransaction = allDonations
+            .filter((d) => !d.refunded && (!d.externalTransactionID || d.externalTransactionProvider !== 'stripe'))
+            .map((d) => d.id);
 
-            if (!donation.externalTransactionID || donation.externalTransactionProvider !== 'stripe') {
-                results.skippedNoTransaction.push(donation.id);
-                continue;
-            }
+        const skippedTooOld = allDonations
+            .filter((d) => !d.refunded && d.externalTransactionID && d.externalTransactionProvider === 'stripe' && d.createdAt < refundCutoff)
+            .map((d) => d.id);
 
-            if (donation.createdAt < refundCutoff) {
-                results.skippedTooOld.push(donation.id);
-                continue;
-            }
+        const refundable = allDonations
+            .filter((d) => !d.refunded && d.externalTransactionID && d.externalTransactionProvider === 'stripe' && d.createdAt >= refundCutoff);
 
-            try {
-                await refundPaymentIntent(donation.externalTransactionID);
+        const refundResults = await Promise.allSettled(
+            refundable.map(async (donation) => {
+                await refundPaymentIntent(donation.externalTransactionID!);
                 await db.update(donations)
                     .set({ refunded: true })
                     .where(eq(donations.id, donation.id));
-                results.refunded.push(donation.id);
-                results.totalRefundedAmount += donation.amount;
-            } catch (e) {
-                results.failed.push({
-                    id: donation.id,
-                    error: e instanceof Error ? e.message : 'Unknown error',
-                });
-            }
-        }
+                return donation;
+            }),
+        );
+
+        const results = refundResults.reduce(
+            (acc, result, i) => {
+                if (result.status === 'fulfilled') {
+                    acc.refunded.push(result.value.id);
+                    acc.totalRefundedAmount += result.value.amount;
+                } else {
+                    acc.failed.push({
+                        id: refundable[i].id,
+                        error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+                    });
+                }
+                return acc;
+            },
+            {
+                refunded: [] as string[],
+                skippedAlreadyRefunded,
+                skippedNoTransaction,
+                skippedTooOld,
+                failed: [] as { id: string; error: string }[],
+                totalRefundedAmount: 0,
+            },
+        );
 
         // Set page to inactive after refunding
         await updatePage(page.id, { status: 'inactive' });
