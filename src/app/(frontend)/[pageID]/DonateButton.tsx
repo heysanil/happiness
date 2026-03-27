@@ -1,7 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import {
+    useCallback, useEffect, useMemo, useRef, useState,
+} from 'react';
+import {
+    useSearchParams, useRouter,
+} from 'next/navigation';
+import {
+    Elements, useStripe, useElements,
+} from '@stripe/react-stripe-js';
 import { Button } from 'paris/button';
 import { Drawer } from 'paris/drawer';
 import { Text } from 'paris/text';
@@ -14,11 +21,26 @@ import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
 import { estimateFee, FrequencyOptions } from '@v1/donations/checkout/DonationConfig';
 import { HappinessConfig } from 'happiness.config';
 import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
+import { stripePromise } from '@lib/stripe/client';
+import { CheckoutForm } from '@frontend/[pageID]/CheckoutForm';
+import { usePagination } from 'paris/pagination';
 
 import clsx from 'clsx';
 import styles from 'src/app/(frontend)/[pageID]/DonateButton.module.scss';
 
 export const AmountPresets = [1000, 2500, 5000, 10000, 25000] as number[];
+
+const DrawerPages = ['details', 'payment'] as const;
+
+const STRIPE_APPEARANCE = {
+    theme: 'flat' as const,
+    labels: 'above' as const,
+    variables: {
+        borderRadius: '8px',
+        fontFamily: "'Graphik Web', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+        colorPrimary: '#131313',
+    },
+};
 
 const initialDonation: DonationConfig = {
     amount: 1000,
@@ -31,48 +53,94 @@ const initialDonation: DonationConfig = {
     tipPercent: 0.1,
 };
 
+/** Compute the total amount in cents for a given donation config */
+const computeTotal = (donation: DonationConfig) => {
+    const fee = donation.coverFees ? estimateFee(donation.amount) : 0;
+    const tip = Math.round((donation.amount + fee) * donation.tipPercent);
+    return donation.amount + fee + tip;
+};
+
 export const DonateButton = ({
     projectName,
     pageID,
     className = '',
 }: {
-    projectName?: string,
-    pageID?: string,
-    className?: string,
+    projectName?: string;
+    pageID?: string;
+    className?: string;
 }) => {
     const params = useSearchParams();
+    const router = useRouter();
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     const [donation, setDonation] = useState<DonationConfig>({
         ...initialDonation,
         projectName: projectName || HappinessConfig.name,
+        pageID: pageID || '',
     });
 
     const [showOtherAmount, setShowOtherAmount] = useState(false);
-    const [otherAmountInput, setOtherAmountInput] = useState('' as string);
+    const [otherAmountInput, setOtherAmountInput] = useState('');
+    const [paymentLoading, setPaymentLoading] = useState(false);
 
-    const estFee = useMemo(() => (
-        estimateFee(donation.amount)
-    ), [donation.amount]);
+    const pagination = usePagination<typeof DrawerPages>('details');
+    const checkoutFormRef = useRef<HTMLFormElement>(null);
 
-    const checkoutURL = useMemo(() => (
-        `/v1/donations/checkout?${new URLSearchParams(
-            Object.fromEntries(
-                Object.entries({
-                    ...donation,
-                    amount: donation.amount + (donation.coverFees ? estFee : 0),
-                    pageName: projectName || HappinessConfig.name,
-                    pageID,
-                }).map(([key, value]) => [key, String(value)]),
-            ),
-        ).toString()}`
-    ), [donation, estFee, pageID, projectName]);
+    const total = useMemo(() => computeTotal(donation), [donation]);
+    const elementsMode = donation.frequency === 'Monthly' ? 'subscription' : 'payment';
 
     useEffect(() => {
         if (params.get('open') === 'donate') {
             setDrawerOpen(true);
         }
     }, [params]);
+
+    const handleClose = useCallback(() => {
+        setDrawerOpen(false);
+        setDonation({
+            ...initialDonation,
+            projectName: projectName || HappinessConfig.name,
+            pageID: pageID || '',
+        });
+        setShowOtherAmount(false);
+        setOtherAmountInput('');
+        pagination.reset();
+    }, [projectName, pageID, pagination]);
+
+    const handleSuccess = useCallback(() => {
+        const name = donation.anonymous ? 'Anonymous' : 'Donor';
+        handleClose();
+        router.replace(`/${pageID}?thanks=${encodeURIComponent(name)}`);
+    }, [handleClose, donation.anonymous, pageID, router]);
+
+    const estFee = useMemo(() => estimateFee(donation.amount), [donation.amount]);
+
+    const bottomPanel = useMemo(() => {
+        if (pagination.currentPage === 'details') {
+            return (
+                <Button
+                    onClick={() => pagination.open('payment')}
+                    disabled={donation.amount === 0}
+                    style={{ width: '100%' }}
+                >
+                    {`Continue to Payment \u2014 ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
+                </Button>
+            );
+        }
+        return (
+            <Button
+                onClick={() => {
+                    checkoutFormRef.current?.requestSubmit();
+                }}
+                disabled={paymentLoading}
+                style={{ width: '100%' }}
+            >
+                {paymentLoading
+                    ? 'Processing...'
+                    : `Donate ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
+            </Button>
+        );
+    }, [pagination, donation.amount, donation.frequency, total, paymentLoading]);
 
     return (
         <>
@@ -85,12 +153,98 @@ export const DonateButton = ({
             <Drawer
                 title="Donate"
                 isOpen={drawerOpen}
-                onClose={() => {
-                    setDrawerOpen(false);
-                    setDonation(initialDonation);
-                    setShowOtherAmount(false);
-                }}
+                onClose={() => handleClose()}
+                pagination={pagination}
+                bottomPanel={bottomPanel}
             >
+                <Elements
+                    key={`${elementsMode}-${donation.frequency}`}
+                    stripe={stripePromise}
+                    options={{
+                        mode: elementsMode,
+                        amount: Math.max(total, 50),
+                        currency: 'usd',
+                        appearance: STRIPE_APPEARANCE,
+                    }}
+                >
+                    {/* eslint-disable-next-line @typescript-eslint/no-use-before-define */}
+                    <DonateDrawerInner
+                        donation={donation}
+                        setDonation={setDonation}
+                        showOtherAmount={showOtherAmount}
+                        setShowOtherAmount={setShowOtherAmount}
+                        otherAmountInput={otherAmountInput}
+                        setOtherAmountInput={setOtherAmountInput}
+                        total={total}
+                        estFee={estFee}
+                        onSuccess={handleSuccess}
+                        checkoutFormRef={checkoutFormRef}
+                        setPaymentLoading={setPaymentLoading}
+                        currentPage={pagination.currentPage}
+                    />
+                </Elements>
+            </Drawer>
+        </>
+    );
+};
+
+/**
+ * Inner component rendered inside <Elements>.
+ * Since the Drawer with pagination expects keyed children, but we need
+ * useStripe/useElements hooks, we render inside Elements and output
+ * the keyed page divs directly for the Drawer's pagination to pick up.
+ *
+ * NOTE: The Drawer matches children by their React `key` prop against
+ * pagination.currentPage. We return a flat array of keyed divs.
+ */
+const DonateDrawerInner = ({
+    donation,
+    setDonation,
+    showOtherAmount,
+    setShowOtherAmount,
+    otherAmountInput,
+    setOtherAmountInput,
+    total,
+    estFee,
+    onSuccess,
+    checkoutFormRef,
+    setPaymentLoading,
+    currentPage,
+}: {
+    donation: DonationConfig;
+    setDonation: React.Dispatch<React.SetStateAction<DonationConfig>>;
+    showOtherAmount: boolean;
+    setShowOtherAmount: (v: boolean) => void;
+    otherAmountInput: string;
+    setOtherAmountInput: (v: string) => void;
+    total: number;
+    estFee: number;
+    onSuccess: () => void;
+    checkoutFormRef: React.RefObject<HTMLFormElement | null>;
+    setPaymentLoading: (v: boolean) => void;
+    currentPage: string;
+}) => {
+    const elements = useElements();
+
+    // Keep Elements amount in sync with donation total
+    useEffect(() => {
+        if (elements) {
+            elements.update({
+                amount: Math.max(total, 50),
+            });
+        }
+    }, [elements, total]);
+
+    const returnUrl = useMemo(
+        () => (typeof window !== 'undefined'
+            ? `${window.location.origin}/v1/donations/checkout/success`
+            : ''),
+        [],
+    );
+
+    return (
+        <>
+            {currentPage === 'details' && (
                 <div className="w-full flex flex-col gap-6">
                     <ButtonGroup
                         options={FrequencyOptions.map((f) => ({ id: f, name: f }))}
@@ -118,9 +272,7 @@ export const DonateButton = ({
                                 >
                                     <Text
                                         kind="paragraphSmall"
-                                        style={{
-                                            fontWeight: 500,
-                                        }}
+                                        style={{ fontWeight: 500 }}
                                     >
                                         {formatCurrency(amount, 0)}
                                     </Text>
@@ -140,9 +292,7 @@ export const DonateButton = ({
                             >
                                 <Text
                                     kind="paragraphSmall"
-                                    style={{
-                                        fontWeight: 500,
-                                    }}
+                                    style={{ fontWeight: 500 }}
                                 >
                                     Other
                                 </Text>
@@ -181,16 +331,12 @@ export const DonateButton = ({
                             <div>
                                 <Text
                                     kind="paragraphSmall"
-                                    style={{
-                                        fontWeight: 500,
-                                    }}
+                                    style={{ fontWeight: 500 }}
                                 >
                                     Message
                                 </Text>
                                 {' '}
-                                <Text
-                                    kind="paragraphSmall"
-                                >
+                                <Text kind="paragraphSmall">
                                     (optional)
                                 </Text>
                             </div>
@@ -206,10 +352,7 @@ export const DonateButton = ({
                             }));
                         }}
                     />
-                    <div className={clsx(
-                        styles.TempCheckboxSpacing,
-                    )}
-                    >
+                    <div className={clsx(styles.TempCheckboxSpacing)}>
                         <Checkbox
                             checked={donation.coverFees}
                             onChange={(e) => {
@@ -219,9 +362,7 @@ export const DonateButton = ({
                                 }));
                             }}
                         >
-                            <Text
-                                kind="paragraphXSmall"
-                            >
+                            <Text kind="paragraphXSmall">
                                 Add
                                 {' '}
                                 <strong>
@@ -232,12 +373,7 @@ export const DonateButton = ({
                             </Text>
                         </Checkbox>
                     </div>
-                    <div className={
-                        clsx(
-                            styles.TempCheckboxSpacing,
-                        )
-                    }
-                    >
+                    <div className={clsx(styles.TempCheckboxSpacing)}>
                         <Checkbox
                             checked={donation.anonymous}
                             onChange={(e) => {
@@ -252,12 +388,7 @@ export const DonateButton = ({
                             </Text>
                         </Checkbox>
                     </div>
-                    <div className={
-                        clsx(
-                            styles.TempCheckboxSpacing,
-                        )
-                    }
-                    >
+                    <div className={clsx(styles.TempCheckboxSpacing)}>
                         <Checkbox
                             checked={donation.tipPercent !== 0}
                             onChange={(e) => {
@@ -293,9 +424,7 @@ export const DonateButton = ({
                                         >
                                             <Text
                                                 kind="paragraphXSmall"
-                                                style={{
-                                                    fontWeight: 500,
-                                                }}
+                                                style={{ fontWeight: 500 }}
                                             >
                                                 {pct * 100}
                                                 %
@@ -306,15 +435,20 @@ export const DonateButton = ({
                             </div>
                         ) : null}
                     </div>
-                    <Button
-                        href={checkoutURL}
-                        hreftarget="_self"
-                        disabled={donation.amount === 0}
-                    >
-                        {`Donate ${formatCurrency(donation.amount + (donation.coverFees ? estFee : 0) + Math.round((donation.amount + (donation.coverFees ? estFee : 0)) * donation.tipPercent), 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
-                    </Button>
                 </div>
-            </Drawer>
+            )}
+
+            {currentPage === 'payment' && (
+                <div className="w-full">
+                    <CheckoutForm
+                        ref={checkoutFormRef as React.Ref<HTMLFormElement>}
+                        donation={donation}
+                        onSuccess={onSuccess}
+                        returnUrl={returnUrl}
+                        onLoadingChange={setPaymentLoading}
+                    />
+                </div>
+            )}
         </>
     );
 };
