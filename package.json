@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "scripts": {
         "dev": "next dev -p ${HP_DEV_PORT:-3000}",
-        "dev:db": "concurrently --kill-others 'pnpm dev' 'pnpm db:gui' -n 'next,db-gui' -c 'bgCyan,bgMagenta'",
+        "dev:db": "concurrently --kill-others 'bun dev' 'bun db:gui' -n 'next,db-gui' -c 'bgCyan,bgMagenta'",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
@@ -65,18 +65,7 @@
         "zod": "^3.22.2",
         "zod-validation-error": "^1.5.0"
     },
-    "pnpm": {
-        "peerDependencyRules": {
-            "ignoreMissing": [
-                "@stoplight/elements"
-            ],
-            "allowedVersions": {
-                "react": "^18",
-                "react-dom": "^18"
-            }
-        },
-        "overrides": {
-            "@headlessui/react": "1.7.15"
-        }
+    "overrides": {
+        "@headlessui/react": "1.7.15"
     }
 }
