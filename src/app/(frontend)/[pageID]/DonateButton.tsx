@@ -39,6 +39,8 @@ const STRIPE_APPEARANCE = {
         borderRadius: '8px',
         fontFamily: "'Graphik Web', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
         colorPrimary: '#131313',
+        fontSizeBase: '14px',
+        spacingUnit: '3px',
     },
 };
 

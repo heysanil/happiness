@@ -35,6 +35,7 @@ HTMLFormElement,
             const elements = useElements();
             const [error, setError] = useState<string | null>(null);
             const [loading, setLoading] = useState(false);
+            const [expressCheckoutAvailable, setExpressCheckoutAvailable] = useState(false);
 
             const estFee = estimateFee(donation.amount);
             const feeAmount = donation.coverFees ? estFee : 0;
@@ -149,32 +150,41 @@ HTMLFormElement,
                         </div>
                     </div>
 
-                    <ExpressCheckoutElement
-                        onConfirm={handleExpressConfirm}
-                        options={{
-                            buttonType: {
-                                applePay: 'donate',
-                                googlePay: 'donate',
-                            },
-                        }}
-                    />
-
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="flex-1 h-px"
-                            style={{ background: 'var(--pte-colors-borderOpaque, #e5e5e5)' }}
-                        />
-                        <Text
-                            kind="paragraphXSmall"
-                            style={{ color: 'var(--pte-colors-contentTertiary, #6b7280)' }}
-                        >
-                            Or pay with card
-                        </Text>
-                        <div
-                            className="flex-1 h-px"
-                            style={{ background: 'var(--pte-colors-borderOpaque, #e5e5e5)' }}
+                    <div style={{ display: expressCheckoutAvailable ? undefined : 'none' }}>
+                        <ExpressCheckoutElement
+                            onConfirm={handleExpressConfirm}
+                            onReady={({ availablePaymentMethods }) => {
+                                if (availablePaymentMethods) {
+                                    setExpressCheckoutAvailable(true);
+                                }
+                            }}
+                            options={{
+                                buttonType: {
+                                    applePay: 'donate',
+                                    googlePay: 'donate',
+                                },
+                            }}
                         />
                     </div>
+
+                    {expressCheckoutAvailable && (
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="flex-1 h-px"
+                                style={{ background: 'var(--pte-colors-borderOpaque, #e5e5e5)' }}
+                            />
+                            <Text
+                                kind="paragraphXSmall"
+                                style={{ color: 'var(--pte-colors-contentTertiary, #6b7280)' }}
+                            >
+                                Or pay with card
+                            </Text>
+                            <div
+                                className="flex-1 h-px"
+                                style={{ background: 'var(--pte-colors-borderOpaque, #e5e5e5)' }}
+                            />
+                        </div>
+                    )}
 
                     <PaymentElement options={{ layout: 'accordion' }} />
 
