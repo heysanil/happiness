@@ -43,7 +43,7 @@ export default async function DonationPage(
     { params }: { params: { pageID: string } },
 ) {
     const page = await getPage(params.pageID);
-    const recentDonations = await listDonations({
+    const rawDonations = await listDonations({
         include: {
             donor: true,
         },
@@ -53,6 +53,14 @@ export default async function DonationPage(
         limit: 30,
         sort: [desc(donations.createdAt)],
     }) as Array<Donation & { donor: Donor }>;
+
+    // Strip donor PII for anonymous donations so it never reaches the client
+    const anonymousDonor: Donor = {
+        id: '', firstName: 'Anonymous', lastName: 'Donor', email: '', anonymous: true, phone: null, company: null, createdAt: new Date(), updatedAt: new Date(),
+    };
+    const recentDonations = rawDonations.map((d) => (
+        d.visible ? d : { ...d, donor: anonymousDonor }
+    ));
 
     if (page.status === 'draft') {
         return notFound();

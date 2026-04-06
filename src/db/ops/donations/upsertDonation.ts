@@ -90,6 +90,10 @@ export const upsertDonation = async (
         }
 
         const donationData = {
+            feeCovered: false,
+            message: null,
+            externalTransactionProvider: null,
+            externalTransactionID: null,
             ...validated,
             donorID: donorData.id,
             id,

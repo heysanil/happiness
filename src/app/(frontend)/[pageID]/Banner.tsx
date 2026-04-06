@@ -28,7 +28,7 @@ export const Banner: FC<BannerProps> = ({
                 <img
                     src={url}
                     alt={alt}
-                    className="max-w-full max-h-full object-contain z-[1]"
+                    className="max-w-full max-h-full h-full object-contain z-[1]"
                 />
             </div>
         )}
