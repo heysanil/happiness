@@ -143,7 +143,7 @@ export const DonateButton = ({
                     : `Donate ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
             </Button>
         );
-    }, [pagination, donation.amount, donation.frequency, total, paymentLoading]);
+    }, [pagination, donation.amount, donation.frequency, donation.email, total, paymentLoading]);
 
     return (
         <>
