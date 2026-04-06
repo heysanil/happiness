@@ -7,6 +7,7 @@ import {
     PaymentElement,
     ExpressCheckoutElement,
     LinkAuthenticationElement,
+    AddressElement,
     useStripe,
     useElements,
 } from '@stripe/react-stripe-js';
@@ -182,6 +183,7 @@ HTMLFormElement,
                             }}
                             options={{
                                 emailRequired: true,
+                                billingAddressRequired: true,
                                 buttonType: {
                                     applePay: 'donate',
                                     googlePay: 'donate',
@@ -215,10 +217,19 @@ HTMLFormElement,
                         }}
                     />
 
+                    <AddressElement
+                        options={{ mode: 'billing' }}
+                        onChange={(e) => {
+                            if (e.complete) {
+                                onBillingChange({ donorName: e.value.name });
+                            }
+                        }}
+                    />
+
                     <PaymentElement
                         options={{
                             layout: 'accordion',
-                            fields: { billingDetails: { name: 'auto' } },
+                            fields: { billingDetails: 'never' },
                         }}
                     />
 

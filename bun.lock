@@ -17,6 +17,8 @@
         "@ssh/csstypes": "^1.1.0",
         "@ssh/eslint-config": "^1.0.0",
         "@stoplight/elements": "^7.10.0",
+        "@stripe/react-stripe-js": "^5.6.1",
+        "@stripe/stripe-js": "^8.11.0",
         "@svgr/webpack": "^8.1.0",
         "@types/node": "20.5.8",
         "@types/react": "18.2.21",
@@ -640,6 +642,10 @@
     "@stoplight/yaml": ["@stoplight/yaml@4.3.0", "", { "dependencies": { "@stoplight/ordered-object-literal": "^1.0.5", "@stoplight/types": "^14.1.1", "@stoplight/yaml-ast-parser": "0.0.50", "tslib": "^2.2.0" } }, "sha512-JZlVFE6/dYpP9tQmV0/ADfn32L9uFarHWxfcRhReKUnljz1ZiUM5zpX+PH8h5CJs6lao3TuFqnPm9IJJCEkE2w=="],
 
     "@stoplight/yaml-ast-parser": ["@stoplight/yaml-ast-parser@0.0.50", "", {}, "sha512-Pb6M8TDO9DtSVla9yXSTAxmo9GVEouq5P40DWXdOie69bXogZTkgvopCq+yEvTMA0F6PEvdJmbtTV3ccIp11VQ=="],
+
+    "@stripe/react-stripe-js": ["@stripe/react-stripe-js@5.6.1", "", { "dependencies": { "prop-types": "^15.7.2" }, "peerDependencies": { "@stripe/stripe-js": ">=8.0.0 <9.0.0", "react": ">=16.8.0 <20.0.0", "react-dom": ">=16.8.0 <20.0.0" } }, "sha512-5xBrjkGmFvKvpMod6VvpOaFaa67eRbmieKeFTePZyOr/sUXzm7A3YY91l330pS0usUst5PxTZDUZHWfOc0v1GA=="],
+
+    "@stripe/stripe-js": ["@stripe/stripe-js@8.11.0", "", {}, "sha512-3fVF4z3efsgwgyj64nFK+6F4/vMw0mUXD2TBbOfftJtKVNx4JNv3CSfe1fY4DCtCk0JFp8/YPNcRkzgV0HJ8cg=="],
 
     "@svgr/babel-plugin-add-jsx-attribute": ["@svgr/babel-plugin-add-jsx-attribute@8.0.0", "", { "peerDependencies": { "@babel/core": "^7.0.0-0" } }, "sha512-b9MIk7yhdS1pMCZM8VeNfUlSKVRhsHZNMl5O9SfaX0l0t5wjdgu4IDzGB8bpnGBBOjGST3rRFVsaaEtI4W6f7g=="],
 

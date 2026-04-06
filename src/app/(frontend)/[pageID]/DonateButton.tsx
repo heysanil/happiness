@@ -36,7 +36,7 @@ const STRIPE_APPEARANCE = {
     theme: 'flat' as const,
     labels: 'above' as const,
     variables: {
-        borderRadius: '8px',
+        borderRadius: '0px',
         fontFamily: "'Graphik Web', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
         colorPrimary: '#131313',
         fontSizeBase: '14px',
