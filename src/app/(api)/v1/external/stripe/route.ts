@@ -32,7 +32,10 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
                 // Skip subscription-originated PIs — they're handled by invoice.paid
                 if (pi.invoice) {
-                    return new NextResponse(null, { status: 202 });
+                    return NextResponse.json(
+                        { status: 200, message: 'Ignored: subscription-originated PaymentIntent; handled by invoice.paid' },
+                        { status: 200 },
+                    );
                 }
 
                 // Validate the metadata to ensure it's Happiness-created
@@ -51,8 +54,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                     .spa(pi.metadata);
 
                 if (!validatePiMetadata.success) {
-                    // Not a Happiness transaction — ignore
-                    return new NextResponse(null, { status: 202 });
+                    // Not a Happiness transaction — acknowledge and ignore
+                    return NextResponse.json(
+                        { status: 200, message: 'Ignored: PaymentIntent not created by Happiness' },
+                        { status: 200 },
+                    );
                 }
 
                 const piMeta = validatePiMetadata.data;
@@ -114,8 +120,13 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             case 'invoice.paid': {
                 const invoice = event.data.object as Stripe.Invoice;
 
-                // Validate the payment intent
-                await z.string().startsWith('in_').parseAsync(invoice.id);
+                // Validate the invoice ID format
+                if (!invoice.id?.startsWith('in_')) {
+                    return NextResponse.json(
+                        { status: 200, message: 'Ignored: invoice ID does not match expected format' },
+                        { status: 200 },
+                    );
+                }
 
                 // Validate the metadata to ensure it's Happiness-created and has the data we need
                 const validateMetadata = await z
@@ -137,7 +148,10 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                     );
 
                 if (!validateMetadata.success) {
-                    throw new HappinessError('Invalid metadata; assuming this is not a Happiness transaction and ignoring', 202, { metadata: invoice.metadata });
+                    return NextResponse.json(
+                        { status: 200, message: 'Ignored: invoice metadata does not match Happiness format; not a Happiness transaction' },
+                        { status: 200 },
+                    );
                 }
 
                 const metadata = validateMetadata.data;
@@ -218,10 +232,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 return NextResponse.json({ refunded: paymentIntentID }, { status: 200 });
             }
             default: {
-                // Unexpected event type, log and ignore it
-                console.warn(`Unhandled event type: ${event.type}`, { event });
-                console.warn('Returning 204');
-                return new NextResponse(null, { status: 204 });
+                console.warn(`Unhandled Stripe event type: ${event.type}`);
+                return NextResponse.json(
+                    { status: 200, message: `Ignored: event type '${event.type}' is not handled` },
+                    { status: 200 },
+                );
             }
         }
     } catch (e) {
