@@ -58,6 +58,8 @@ export const DonorRequired = [
     'lastName',
 ];
 
+export const DonorCreateRequired = ['email', 'firstName', 'lastName'];
+
 export const DonorSchema = (
     /** Set `false` for creates or updates, to exclude fields like `id` and timestamps. */
     readOnly = false,
@@ -68,5 +70,9 @@ export const DonorSchema = (
     description:
         'A donor is a person or organization that has donated to a page.',
     properties: DonorProperties(readOnly),
-    ...(allFieldsOptional ? { required: ['id'] } : { required: DonorRequired }),
+    ...(allFieldsOptional
+        ? readOnly
+            ? { required: ['id'] }
+            : {}
+        : { required: readOnly ? DonorRequired : DonorCreateRequired }),
 });

@@ -42,6 +42,12 @@ export const PageProperties = (
         example: 'Sanil Chawla',
         maxLength: 255,
     },
+    organizerPicture: {
+        type: 'string',
+        description: 'A URL to the profile picture of the organizer.',
+        nullable: true,
+        example: 'https://example.com/photo.jpg',
+    },
     fsProject: {
         type: 'string',
         description:
@@ -110,6 +116,11 @@ export const PageProperties = (
         enum: ['usd'],
         nullable: true,
     },
+    showRelatedPages: {
+        type: 'boolean',
+        description: 'When true, shows related pages on the public page.',
+        default: false,
+    },
     hideAmountRaised: {
         type: 'boolean',
         description:
@@ -129,6 +140,16 @@ export const PageSchema = (
     description: `Pages represent a donation page on ${HappinessConfig.name}. Each page can represent an organization, campaign, project, event, or any other entity raising funds.`,
     properties: PageProperties(readOnly),
     ...(allFieldsOptional
-        ? { required: ['id'] }
-        : { required: [...alwaysRequired, 'slug', 'kind', 'name', 'title'] }),
+        ? readOnly
+            ? { required: ['id'] }
+            : {}
+        : {
+              required: [
+                  ...(readOnly ? alwaysRequired : []),
+                  'slug',
+                  'kind',
+                  'name',
+                  'title',
+              ],
+          }),
 });

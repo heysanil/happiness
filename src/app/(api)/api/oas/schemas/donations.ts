@@ -78,6 +78,17 @@ export const DonationProperties = (
         nullable: true,
         example: 'ch_1a2b3c4d5e6f7',
     },
+    tipAmount: {
+        type: 'number',
+        description: 'The tip amount included in the donation, in USD cents.',
+        example: 500,
+        default: 0,
+    },
+    refunded: {
+        type: 'boolean',
+        description: 'Whether the donation has been refunded.',
+        default: false,
+    },
     ...(readOnly ? timestamps : {}),
 });
 
@@ -89,6 +100,8 @@ export const DonationRequired = [
     'amountCurrency',
 ];
 
+export const DonationCreateRequired = ['pageID', 'amount', 'amountCurrency'];
+
 export const DonationSchema = (
     /** Set `false` for creates or updates, to exclude fields like `id` and timestamps. */
     readOnly = false,
@@ -97,9 +110,11 @@ export const DonationSchema = (
 ): SchemaObject => ({
     type: 'object',
     description:
-        'A donor is a person or organization that has donated to a page.',
+        'A donation represents a financial contribution made by a donor to a page.',
     properties: DonationProperties(readOnly),
     ...(allFieldsOptional
-        ? { required: ['id'] }
-        : { required: DonationRequired }),
+        ? readOnly
+            ? { required: ['id'] }
+            : {}
+        : { required: readOnly ? DonationRequired : DonationCreateRequired }),
 });

@@ -1,3 +1,5 @@
+import { DonationSchema } from '@docs/oas/schemas/donations';
+import { DonorProperties, DonorRequired } from '@docs/oas/schemas/donors';
 import { IncludeParam } from '@docs/oas/schemas/include';
 import { errorResponses } from '@docs/oas/shared/errorResponses';
 import type { OperationObject } from 'openapi3-ts/oas30';
@@ -33,12 +35,22 @@ export const DONORS_SEARCH_GET_SCHEMA: OperationObject = {
             content: {
                 'application/json': {
                     schema: {
-                        $ref: '#/components/schemas/Donor',
+                        type: 'object',
+                        properties: {
+                            ...DonorProperties(true),
+                            donations: {
+                                type: 'array',
+                                description:
+                                    'A list of donations made by this donor. Only included if the `include` query parameter includes `donations`.',
+                                items: DonationSchema(true),
+                            },
+                        },
+                        required: DonorRequired,
                     },
                 },
             },
         },
-        ...errorResponses(),
+        ...errorResponses([400, 401, 404, 500]),
     },
     security: [{ bearerAuth: [] }],
 };

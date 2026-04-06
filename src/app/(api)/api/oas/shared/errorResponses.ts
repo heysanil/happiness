@@ -61,6 +61,17 @@ export const ErrorResponses: ResponsesObject = {
             },
         },
     },
+    Error404: {
+        description:
+            'Not found; returned when the requested resource does not exist.',
+        content: {
+            'application/json': {
+                schema: {
+                    $ref: '#/components/schemas/Error',
+                },
+            },
+        },
+    },
     Error500: {
         description:
             'Internal server error; returned when an unexpected error occurs on the server.',
@@ -83,6 +94,9 @@ const allErrors = {
     },
     403: {
         $ref: '#/components/responses/Error403',
+    },
+    404: {
+        $ref: '#/components/responses/Error404',
     },
     500: {
         $ref: '#/components/responses/Error500',
