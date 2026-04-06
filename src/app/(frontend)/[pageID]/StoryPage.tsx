@@ -9,8 +9,8 @@ import { Card } from 'paris/card';
 import { Text } from 'paris/text';
 import { pvar } from 'paris/theme';
 import type { FC } from 'react';
-import ReactMarkdown from 'react-markdown';
 import SparkMD5 from 'spark-md5';
+import { Markdown } from 'src/components/Markdown/Markdown';
 import { formatCurrency } from 'src/util/formatCurrency';
 
 export const StoryPage: FC<{
@@ -47,9 +47,7 @@ export const StoryPage: FC<{
             )}
             {page.story && (
                 <div className="w-full flex flex-col gap-1">
-                    <div className={styles.story}>
-                        <ReactMarkdown>{page.story}</ReactMarkdown>
-                    </div>
+                    <Markdown>{page.story}</Markdown>
                     {embed ? (
                         <Text
                             as="p"

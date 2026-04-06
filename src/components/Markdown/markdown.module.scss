@@ -1,0 +1,395 @@
+/* ── Markdown renderer styles ─────────────────────────────────
+ * Uses Paris design tokens (--pte-*) for consistent theming.
+ * All styles are scoped via CSS modules.
+ * ──────────────────────────────────────────────────────────── */
+
+.markdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    line-height: 1.7;
+    color: var(--pte-new-colors-contentPrimary);
+
+    // ── Headings ──────────────────────────────────────────
+    .heading {
+        margin-top: 1.5em;
+        margin-bottom: 0.6em;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    // ── Paragraphs ────────────────────────────────────────
+    .paragraph {
+        margin-bottom: 1em;
+        line-height: 1.7;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    // ── Strikethrough ─────────────────────────────────────
+    .strikethrough {
+        text-decoration: line-through;
+        text-decoration-color: var(--pte-new-colors-contentTertiary);
+    }
+
+    // ── Links (StyledLink handles base styles) ────────────
+
+    // ── Images ────────────────────────────────────────────
+    .imageWrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 1em 0;
+    }
+
+    .image {
+        max-width: 100%;
+        height: auto;
+        border-radius: var(--pte-new-borders-radius-rounded);
+        border: 1px solid var(--pte-new-colors-borderSubtle);
+    }
+
+    .imageCaption {
+        display: block;
+        text-align: center;
+    }
+
+    // ── Blockquotes (Callout base styles + overrides) ─────
+    .blockquote {
+        margin: 1em 0;
+        border-left: 3px solid var(--pte-new-colors-contentAccent);
+
+        // Nested blockquotes
+        .blockquote {
+            margin: 0.5em 0;
+        }
+
+        .paragraph {
+            margin-bottom: 0.5em;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+    }
+
+    // ── Horizontal rules ──────────────────────────────────
+    .hr {
+        border: none;
+        border-top: 1px solid var(--pte-new-colors-borderMedium);
+        margin: 1.5em 0;
+    }
+
+    // ── Lists ─────────────────────────────────────────────
+    .list {
+        margin: 0.5em 0 1em;
+        padding-left: 1.5em;
+    }
+
+    .unorderedList {
+        list-style-type: disc;
+
+        .unorderedList {
+            list-style-type: circle;
+            margin: 0.25em 0;
+
+            .unorderedList {
+                list-style-type: square;
+            }
+        }
+    }
+
+    .orderedList {
+        list-style-type: decimal;
+
+        .orderedList {
+            list-style-type: lower-alpha;
+            margin: 0.25em 0;
+
+            .orderedList {
+                list-style-type: lower-roman;
+            }
+        }
+    }
+
+    .listItem {
+        margin-bottom: 0.25em;
+        line-height: 1.7;
+        font-size: var(--pte-new-typography-paragraphMedium-fontSize, 14px);
+
+        .paragraph {
+            margin-bottom: 0.25em;
+        }
+    }
+
+    // ── Task lists ────────────────────────────────────────
+    .taskList {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .taskListItem {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 8px;
+
+        input[type='checkbox'] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid var(--pte-new-colors-borderStrong);
+            border-radius: 4px;
+            background: transparent;
+            cursor: default;
+            flex-shrink: 0;
+            position: relative;
+            top: 2px;
+
+            &:checked {
+                background-color: var(--pte-new-colors-contentAccent);
+                border-color: var(--pte-new-colors-contentAccent);
+
+                &::after {
+                    content: '✓';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: white;
+                }
+            }
+        }
+    }
+
+    // ── Inline code ───────────────────────────────────────
+    .inlineCode {
+        font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 0.875em;
+        padding: 2px 6px;
+        border-radius: 6px;
+        background-color: var(--pte-new-colors-backgroundSecondary);
+        border: 1px solid var(--pte-new-colors-borderSubtle);
+        color: var(--pte-new-colors-contentPrimary);
+        word-break: break-word;
+    }
+
+    // ── Code blocks ───────────────────────────────────────
+    .pre {
+        margin: 1em 0;
+        padding: 0;
+        background: transparent;
+        overflow: visible;
+    }
+
+    .codeBlockWrapper {
+        position: relative;
+        border-radius: var(--pte-new-borders-radius-rounded, 8px);
+        background-color: var(--pte-new-colors-backgroundSecondary);
+        border: 1px solid var(--pte-new-colors-borderSubtle);
+        overflow: hidden;
+    }
+
+    .codeLanguage {
+        display: flex;
+        align-items: center;
+        padding: 6px 16px;
+        border-bottom: 1px solid var(--pte-new-colors-borderSubtle);
+        background-color: var(--pte-new-colors-backgroundSecondary);
+        color: var(--pte-new-colors-contentTertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .codeBlock {
+        display: block;
+        padding: 16px;
+        overflow-x: auto;
+        font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        tab-size: 4;
+        white-space: pre;
+        color: var(--pte-new-colors-contentPrimary);
+
+        // Scrollbar styling
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: var(--pte-new-colors-borderMedium);
+            border-radius: 3px;
+        }
+    }
+
+    // ── Tables ────────────────────────────────────────────
+    .tableWrapper {
+        margin: 1em 0;
+        overflow-x: auto;
+        border-radius: var(--pte-new-borders-radius-rounded, 8px);
+        border: 1px solid var(--pte-new-colors-borderSubtle);
+
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: var(--pte-new-colors-borderMedium);
+            border-radius: 3px;
+        }
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--pte-new-typography-paragraphSmall-fontSize, 13px);
+    }
+
+    .thead {
+        background-color: var(--pte-new-colors-backgroundSecondary);
+    }
+
+    .th {
+        padding: 10px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--pte-new-colors-borderMedium);
+        white-space: nowrap;
+        color: var(--pte-new-colors-contentSecondary);
+    }
+
+    .td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--pte-new-colors-borderSubtle);
+        color: var(--pte-new-colors-contentPrimary);
+    }
+
+    .tr {
+        &:last-child .td {
+            border-bottom: none;
+        }
+    }
+
+    .tbody .tr {
+        transition: background-color 0.15s ease;
+
+        &:hover {
+            background-color: var(--pte-new-colors-backgroundSecondary);
+        }
+    }
+
+    // ── Accordion body (details/summary) ──────────────────
+    .accordionBody {
+        padding: 4px 0;
+
+        .paragraph {
+            margin-bottom: 0.5em;
+        }
+    }
+
+    // ── Keyboard keys ─────────────────────────────────────
+    .kbd {
+        display: inline-block;
+        font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 0.8em;
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--pte-new-colors-borderMedium);
+        background: linear-gradient(
+            180deg,
+            var(--pte-new-colors-backgroundPrimary) 0%,
+            var(--pte-new-colors-backgroundSecondary) 100%
+        );
+        box-shadow: 0 1px 0 1px var(--pte-new-colors-borderSubtle);
+        color: var(--pte-new-colors-contentSecondary);
+        line-height: 1.6;
+        white-space: nowrap;
+    }
+
+    // ── Superscript & subscript ───────────────────────────
+    .sup,
+    .sub {
+        font-size: 0.75em;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+    }
+
+    .sup {
+        top: -0.5em;
+    }
+
+    .sub {
+        bottom: -0.25em;
+    }
+
+    // ── Highlight / mark ──────────────────────────────────
+    .mark {
+        background-color: var(--pte-new-colors-backgroundWarningMedium, #fef3c7);
+        color: inherit;
+        padding: 1px 4px;
+        border-radius: 3px;
+    }
+
+    // ── Definition lists ──────────────────────────────────
+    .dl {
+        margin: 1em 0;
+    }
+
+    .dt {
+        margin-top: 1em;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    .dd {
+        margin-left: 1.5em;
+        margin-top: 0.25em;
+        padding-left: 1em;
+        border-left: 2px solid var(--pte-new-colors-borderSubtle);
+    }
+
+    // ── Footnotes (generated by remark-gfm) ───────────────
+    section[data-footnotes] {
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid var(--pte-new-colors-borderMedium);
+        font-size: 0.875em;
+        color: var(--pte-new-colors-contentSecondary);
+
+        h2 {
+            font-size: 0.875em;
+            font-weight: 600;
+            margin-bottom: 0.5em;
+        }
+
+        ol {
+            padding-left: 1.5em;
+        }
+
+        li {
+            margin-bottom: 0.25em;
+        }
+
+        a {
+            color: var(--pte-new-colors-contentAccent);
+        }
+    }
+}

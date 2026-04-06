@@ -8,9 +8,9 @@ import { Text } from 'paris/text';
 import { pvar } from 'paris/theme';
 import type { FC } from 'react';
 import { Fragment } from 'react';
-import ReactMarkdown from 'react-markdown';
 import SparkMD5 from 'spark-md5';
 import { Avatar } from 'src/components/Avatar';
+import { Markdown } from 'src/components/Markdown/Markdown';
 import { formatCurrency } from 'src/util/formatCurrency';
 
 const RECENT_DONATION_COUNT = 5;
@@ -98,7 +98,7 @@ export const SimplePage: FC<{
                         {page.subtitle}
                     </Text>
                     {page.story && (
-                        <ReactMarkdown key="story">{page.story}</ReactMarkdown>
+                        <Markdown key="story">{page.story}</Markdown>
                     )}
                     {HappinessConfig.fiscalSponsorMode && (
                         <Text key="fiscal" as="p" kind="paragraphXSmall">
