@@ -2,6 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
     bigint,
     boolean,
+    json,
     mysqlEnum,
     mysqlTableCreator,
     text,
@@ -11,11 +12,21 @@ import {
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { HappinessConfig } from 'happiness.config';
 import { generateID, Prefixes } from 'src/util/generateID';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 const mysqlTable = mysqlTableCreator(
     (name) => `${HappinessConfig.databaseTablePrefix}_${name}`,
 );
+
+export const presetItemSchema = z.object({
+    amount: z.number().int().positive(),
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().min(1).max(200).optional(),
+});
+
+export const presetsSchema = z.array(presetItemSchema).min(1).max(10);
+
+export type PresetItem = z.infer<typeof presetItemSchema>;
 
 const PagesColumns = {
     id: varchar('id', { length: 20 })
@@ -45,6 +56,7 @@ const PagesColumns = {
     currency: mysqlEnum('goal_currency', ['usd']),
     showRelatedPages: boolean('show_related_pages').notNull().default(false),
     hideAmountRaised: boolean('hide_amount_raised').notNull().default(false),
+    presets: json().$type<PresetItem[]>(),
     status: mysqlEnum('status', ['draft', 'published', 'inactive'])
         .notNull()
         .default('published'),
