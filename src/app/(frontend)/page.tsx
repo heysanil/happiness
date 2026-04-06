@@ -15,7 +15,7 @@ export default async function Home() {
                     {HappinessConfig.name}
                 </Text>
             </div>
-            <PortalButton href="/v1/portal" />
+            <PortalButton />
         </main>
     );
 }

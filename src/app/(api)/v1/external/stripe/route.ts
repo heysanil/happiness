@@ -1,6 +1,8 @@
 import { db } from '@db/init';
 import { upsertDonation } from '@db/ops/donations/upsertDonation';
+import { getPage } from '@db/ops/pages/getPage';
 import { donations } from '@db/schema';
+import { sendDonationConfirmation } from '@lib/email/sendDonationConfirmation';
 import { stripe } from '@lib/stripe';
 import { handleErrors } from '@v1/responses/handleErrors';
 import { eq } from 'drizzle-orm';
@@ -116,15 +118,16 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 const [donorFirst, ...donorLastParts] =
                     donorFullName.split(' ');
 
+                const donationAmount =
+                    piExpanded.amount_received - Number(piMeta.tipAmount || 0);
+
                 const piDonation = await upsertDonation(
                     {
                         id: piMeta.donationID,
                         pageID: piMeta.pageID,
                         message: piMeta.message,
                         visible: piMeta.visible === 'true',
-                        amount:
-                            piExpanded.amount_received -
-                            Number(piMeta.tipAmount || 0),
+                        amount: donationAmount,
                         amountCurrency: piExpanded.currency,
                         fee: balanceTx.fee,
                         feeCurrency: balanceTx.currency,
@@ -140,6 +143,30 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         anonymous: piMeta.visible !== 'true',
                     },
                 );
+
+                // Send confirmation email asynchronously
+                if (!donorEmail.endsWith('@donor.noemail')) {
+                    getPage(piMeta.pageID)
+                        .then((p) =>
+                            sendDonationConfirmation({
+                                donationID: piMeta.donationID,
+                                donorEmail,
+                                donorName: donorFirst || 'Donor',
+                                amount: donationAmount,
+                                amountCurrency: piExpanded.currency,
+                                campaignName: p.name,
+                                organizer: p.organizer,
+                                fsProject: p.fsProject ?? null,
+                                date: new Date(),
+                            }),
+                        )
+                        .catch((err) =>
+                            console.error(
+                                '[webhook] Failed to send confirmation email:',
+                                err,
+                            ),
+                        );
+                }
 
                 return NextResponse.json(piDonation, { status: 201 });
             }
@@ -239,15 +266,16 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 const [invFirst, ...invLastParts] = invoiceDonorName.split(' ');
 
                 // Upsert donation
+                const invoiceDonationAmount =
+                    pi.amount_received - Number(metadata.tipAmount || 0);
+
                 const donation = await upsertDonation(
                     {
                         id: donationID,
                         pageID: metadata.pageID,
                         message: metadata.message,
                         visible: metadata.visible === 'true',
-                        amount:
-                            pi.amount_received -
-                            Number(metadata.tipAmount || 0),
+                        amount: invoiceDonationAmount,
                         amountCurrency: pi.currency,
                         fee: balanceTx.fee,
                         feeCurrency: balanceTx.currency,
@@ -263,6 +291,30 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         anonymous: metadata.visible !== 'true',
                     },
                 );
+
+                // Send confirmation email asynchronously
+                if (!invoiceDonorEmail.endsWith('@donor.noemail')) {
+                    getPage(metadata.pageID)
+                        .then((p) =>
+                            sendDonationConfirmation({
+                                donationID,
+                                donorEmail: invoiceDonorEmail,
+                                donorName: invFirst || 'Donor',
+                                amount: invoiceDonationAmount,
+                                amountCurrency: pi.currency,
+                                campaignName: p.name,
+                                organizer: p.organizer,
+                                fsProject: p.fsProject ?? null,
+                                date: new Date(),
+                            }),
+                        )
+                        .catch((err) =>
+                            console.error(
+                                '[webhook] Failed to send confirmation email:',
+                                err,
+                            ),
+                        );
+                }
 
                 return NextResponse.json(donation, { status: 201 });
             }
