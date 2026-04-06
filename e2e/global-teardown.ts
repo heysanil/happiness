@@ -2,6 +2,8 @@
 // Playwright global teardown — runs once after all E2E test suites
 // ---------------------------------------------------------------------------
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { FullConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 
@@ -53,6 +55,10 @@ export default async function globalTeardown(_config: FullConfig) {
     } catch (err) {
         console.error('[e2e] Failed to clear MailPit:', err);
     }
+
+    // 4. Clean up any saved auth state files
+    const authState = path.join(__dirname, '.dashboard-auth-state.json');
+    if (fs.existsSync(authState)) fs.unlinkSync(authState);
 
     console.log('[e2e] Global teardown complete.');
 }

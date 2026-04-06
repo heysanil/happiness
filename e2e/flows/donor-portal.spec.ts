@@ -16,11 +16,15 @@ test.describe('Donor Portal Flow', () => {
 
         // Step 2: Verify the dashboard shows a welcome greeting with the donor's first name
         await expect(
-            page.getByText(`Welcome back, ${TEST_DONOR_FIRST}`),
+            page.getByRole('heading', {
+                name: new RegExp(`Welcome back,?\\s*${TEST_DONOR_FIRST}`),
+            }),
         ).toBeVisible();
 
         // Step 3: Verify the donation history section is visible
-        await expect(page.getByText('Donation History')).toBeVisible();
+        await expect(
+            page.getByRole('heading', { name: 'Donation History' }),
+        ).toBeVisible();
 
         // Step 4: Verify the donations table is present and the seeded donation appears
         const table = page.locator('table');
@@ -44,6 +48,8 @@ test.describe('Donor Portal Flow', () => {
 
         // Step 7: Verify redirected back to the portal login page
         await page.waitForURL('**/portal', { timeout: 15_000 });
-        await expect(page.getByText('Donor Portal')).toBeVisible();
+        await expect(
+            page.getByRole('heading', { name: 'Donor Portal' }),
+        ).toBeVisible();
     });
 });

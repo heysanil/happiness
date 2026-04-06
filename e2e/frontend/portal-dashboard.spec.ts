@@ -1,11 +1,38 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { expect, test } from '@playwright/test';
 import { loginAsDonor } from '../helpers/auth';
 import { TEST_DONOR_EMAIL, TEST_DONOR_FIRST } from '../helpers/fixtures';
 
+const AUTH_STATE = path.join(__dirname, '..', '.dashboard-auth-state.json');
+
 test.describe('Portal dashboard', () => {
     test.describe('authenticated', () => {
-        test.beforeEach(async ({ page }) => {
+        // loginAsDonor can retry OTP extraction multiple times if SMTP is slow
+        test.setTimeout(120_000);
+
+        test.beforeEach(async ({ page, context }) => {
+            // Try to reuse a previously saved auth session to avoid
+            // repeated OTP emails that exhaust the SMTP connection.
+            if (fs.existsSync(AUTH_STATE)) {
+                const cookies = JSON.parse(
+                    fs.readFileSync(AUTH_STATE, 'utf-8'),
+                );
+                await context.addCookies(cookies);
+                await page.goto('/portal/dashboard');
+                // Verify the session is still valid (not redirected to /portal)
+                const url = page.url();
+                if (url.includes('/portal/dashboard')) {
+                    return;
+                }
+                // Session expired — fall through to full login
+            }
+
             await loginAsDonor(page, TEST_DONOR_EMAIL);
+
+            // Save the auth cookies for subsequent tests
+            const cookies = await context.cookies();
+            fs.writeFileSync(AUTH_STATE, JSON.stringify(cookies));
         });
 
         test('shows welcome message with donor first name', async ({

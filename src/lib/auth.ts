@@ -1,24 +1,83 @@
-import { Redis } from '@upstash/redis';
 import { betterAuth } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 import nodemailer from 'nodemailer';
 
+interface RedisLike {
+    get(key: string): Promise<string | null>;
+    set(key: string, value: string, opts?: { ex?: number }): Promise<unknown>;
+    del(key: string): Promise<unknown>;
+}
+
 const getRedis = (() => {
-    let instance: Redis | null = null;
-    return () => {
+    let instance: RedisLike | null = null;
+    return (): RedisLike => {
         if (!instance) {
-            if (
-                !process.env.UPSTASH_REDIS_REST_URL ||
-                !process.env.UPSTASH_REDIS_REST_TOKEN
-            ) {
-                throw new Error(
-                    'Please set the UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables',
-                );
+            if (process.env.AUTH_REDIS_DRIVER === 'ioredis') {
+                // biome-ignore lint: conditional dynamic import for test Redis
+                const IORedis =
+                    require('ioredis').default || require('ioredis');
+                const redisUrl =
+                    process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+                const client = new IORedis(redisUrl);
+                instance = {
+                    async get(key: string) {
+                        const val = await client.get(key);
+                        return val ?? null;
+                    },
+                    async set(
+                        key: string,
+                        value: string,
+                        opts?: { ex?: number },
+                    ) {
+                        if (opts?.ex) {
+                            await client.set(key, value, 'EX', opts.ex);
+                        } else {
+                            await client.set(key, value);
+                        }
+                    },
+                    async del(key: string) {
+                        await client.del(key);
+                    },
+                };
+            } else {
+                // biome-ignore lint: conditional dynamic import for Upstash
+                const { Redis } = require('@upstash/redis');
+                if (
+                    !process.env.UPSTASH_REDIS_REST_URL ||
+                    !process.env.UPSTASH_REDIS_REST_TOKEN
+                ) {
+                    throw new Error(
+                        'Please set the UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables',
+                    );
+                }
+                const upstash = new Redis({
+                    url: process.env.UPSTASH_REDIS_REST_URL,
+                    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+                });
+                instance = {
+                    async get(key: string) {
+                        const raw = await upstash.get(key);
+                        if (raw === null || raw === undefined) return null;
+                        return typeof raw === 'string'
+                            ? raw
+                            : JSON.stringify(raw);
+                    },
+                    async set(
+                        key: string,
+                        value: string,
+                        opts?: { ex?: number },
+                    ) {
+                        if (opts?.ex) {
+                            await upstash.set(key, value, { ex: opts.ex });
+                        } else {
+                            await upstash.set(key, value);
+                        }
+                    },
+                    async del(key: string) {
+                        await upstash.del(key);
+                    },
+                };
             }
-            instance = new Redis({
-                url: process.env.UPSTASH_REDIS_REST_URL,
-                token: process.env.UPSTASH_REDIS_REST_TOKEN,
-            });
         }
         return instance;
     };
@@ -61,15 +120,7 @@ export const auth = betterAuth({
     secret: process.env.BETTER_AUTH_SECRET,
     secondaryStorage: {
         get: async (key) => {
-            const raw = await getRedis().get(key);
-            // Upstash auto-deserializes JSON — coerce back to string
-            // since better-auth's secondaryStorage expects raw strings.
-            const value =
-                raw === null || raw === undefined
-                    ? null
-                    : typeof raw === 'string'
-                      ? raw
-                      : JSON.stringify(raw);
+            const value = await getRedis().get(key);
             console.log(
                 `[auth:redis] GET ${key} → ${value ? value.slice(0, 80) : 'null'}`,
             );

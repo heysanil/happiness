@@ -60,7 +60,9 @@ async function checkMySQL() {
 }
 
 async function checkMailPit() {
-    const res = await fetch('http://localhost:8025/api/v1/messages');
+    const res = await fetch(
+        `${process.env.MAILPIT_URL || 'http://localhost:8025'}/api/v1/messages`,
+    );
     if (!res.ok) throw new Error(`MailPit returned ${res.status}`);
 }
 
@@ -187,12 +189,10 @@ export default async function globalSetup(_config: FullConfig) {
     console.log('[e2e] Seeding test data...');
     await seedTestData();
 
-    // 4. Build Next.js
-    console.log('[e2e] Building Next.js...');
-    execSync('bunx next build', {
-        stdio: 'inherit',
-        env: { ...process.env },
-    });
+    // 4. Build is handled by the webServer command in playwright.config.ts
+    // (e.g. `bun run build && bun run start`). This ensures the .next
+    // directory is fresh when `next start` reads it, avoiding stale static
+    // assets that would cause "Application error: a client-side exception".
 
     // 5. Write seeded IDs to disk for reference
     const testDataPath = path.join(__dirname, '.test-data.json');

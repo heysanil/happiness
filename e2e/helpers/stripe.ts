@@ -7,6 +7,12 @@ import Stripe from 'stripe';
 const WEBHOOK_SECRET =
     process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_local_e2e_secret';
 
+// Stripe SDK v13: generateTestHeaderString lives on the instance, not static
+const stripeForWebhooks = new Stripe(
+    process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder',
+    { apiVersion: '2023-08-16' },
+);
+
 /**
  * Generates a signed Stripe webhook payload suitable for POSTing to the
  * application's webhook endpoint.
@@ -23,7 +29,7 @@ export function generateWebhookPayload(eventType: string, data: object) {
     });
 
     const timestamp = Math.floor(Date.now() / 1000);
-    const signature = Stripe.webhooks.generateTestHeaderString({
+    const signature = stripeForWebhooks.webhooks.generateTestHeaderString({
         payload,
         secret: WEBHOOK_SECRET,
         timestamp,
