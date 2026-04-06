@@ -8,11 +8,9 @@ const ArrowRightIcon = ({ size }: { size: number }) => (
     <FontAwesomeIcon width={`${size}px`} icon={faArrowRight} />
 );
 
-export const PortalButton = ({ href }: { href: string }) => (
+export const PortalButton = () => (
     <Button
-        render={(props) => (
-            <a href={href} target="_blank" rel="noreferrer" {...props} />
-        )}
+        render={(props) => <a href="/portal" {...props} />}
         endEnhancer={ArrowRightIcon}
     >
         Donor login

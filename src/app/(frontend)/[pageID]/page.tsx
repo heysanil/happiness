@@ -114,12 +114,7 @@ export default async function DonationPage({
                             />
                         </div>
                     </a>
-                    <a
-                        href="/v1/portal"
-                        target="_blank"
-                        className="cursor-pointer"
-                        rel="noopener"
-                    >
+                    <a href="/portal" className="cursor-pointer">
                         <LoginIcon width="20px" />
                     </a>
                 </nav>

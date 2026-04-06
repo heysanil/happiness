@@ -35,20 +35,24 @@
         "@types/react-dom": "18.2.7",
         "@types/spark-md5": "^3.0.2",
         "@types/yargs": "^17.0.24",
+        "@upstash/redis": "^1.37.0",
         "@vercel/analytics": "^1.0.2",
         "@vercel/speed-insights": "^1.2.0",
         "autoprefixer": "10.4.15",
+        "better-auth": "^1.5.6",
         "clsx": "^2.0.0",
         "concurrently": "^8.2.1",
         "dayjs": "^1.11.9",
         "dotenv": "^16.3.1",
-        "drizzle-kit": "^0.19.13",
-        "drizzle-orm": "^0.28.5",
-        "drizzle-zod": "^0.5.1",
+        "drizzle-kit": "0.19.13",
+        "drizzle-orm": "0.28.6",
+        "drizzle-zod": "0.5.1",
         "email-validator": "^2.0.4",
+        "jspdf": "^4.2.1",
         "mysql2": "^3.6.0",
         "nanoid": "^4.0.2",
         "next": "13.5.11",
+        "nodemailer": "^8.0.4",
         "openapi3-ts": "^4.1.2",
         "paris": "^0.8.0",
         "postcss": "8.4.29",
@@ -61,6 +65,7 @@
         "stripe": "^13.4.0",
         "tailwindcss": "3.3.3",
         "typescript": "5.2.2",
+        "wawoff2": "^2.0.1",
         "yargs": "^17.7.2",
         "zod": "^3.22.2",
         "zod-validation-error": "^1.5.0"
@@ -70,6 +75,7 @@
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.10",
+        "@types/nodemailer": "^8.0.0",
         "lefthook": "^2.1.4"
     }
 }
