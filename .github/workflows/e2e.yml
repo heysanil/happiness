@@ -15,7 +15,7 @@ concurrency:
 jobs:
   e2e:
     name: Playwright E2E
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-default
     outputs:
       results: ${{ steps.test.outputs.results }}
 
@@ -124,7 +124,7 @@ jobs:
 
   comment:
     name: PR Comment
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-default
     needs: [e2e]
     if: github.event_name == 'pull_request' && always()
     permissions:
