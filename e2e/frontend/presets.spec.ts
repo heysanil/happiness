@@ -27,7 +27,7 @@ test.describe
         ];
 
         const gridPresets = [
-            { amount: 500 },
+            { amount: 700 },
             { amount: 1500 },
             { amount: 3000 },
             { amount: 8000 },
@@ -187,7 +187,7 @@ test.describe
             await expect(drawer).toBeVisible({ timeout: 5_000 });
 
             // Custom grid amounts
-            await expect(drawer.getByText('$5', { exact: true })).toBeVisible();
+            await expect(drawer.getByText('$7', { exact: true })).toBeVisible();
             await expect(
                 drawer.getByText('$15', { exact: true }),
             ).toBeVisible();
