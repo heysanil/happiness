@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from 'src/app/(frontend)/[pageID]/DonateButton.module.scss';
 import { ButtonGroup } from 'src/components/ButtonGroup';
 import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
-import { formatCurrency } from 'src/util/formatCurrency';
+import { formatCurrency, formatCurrencyCompact } from 'src/util/formatCurrency';
 
 export const AmountPresets = [1000, 2500, 5000, 10000, 25000] as number[];
 
@@ -355,9 +355,8 @@ const DonateDrawerInner = ({
                                                     kind="paragraphSmall"
                                                     weight="medium"
                                                 >
-                                                    {formatCurrency(
+                                                    {formatCurrencyCompact(
                                                         preset.amount,
-                                                        0,
                                                     )}
                                                 </Text>
                                             </div>
@@ -409,7 +408,7 @@ const DonateDrawerInner = ({
                                             kind="paragraphSmall"
                                             style={{ fontWeight: 500 }}
                                         >
-                                            {formatCurrency(amount, 0)}
+                                            {formatCurrencyCompact(amount)}
                                         </Text>
                                     </DonationAmountSelector>
                                 ))}
