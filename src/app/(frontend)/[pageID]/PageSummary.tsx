@@ -49,6 +49,7 @@ export const PageSummary: FC<{
                             HappinessConfig.name
                         }
                         pageID={page.id}
+                        presets={page.presets}
                     />
                 ) : (
                     <Button

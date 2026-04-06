@@ -81,6 +81,7 @@ export const SimplePage: FC<{
                             }
                             pageID={page.id}
                             className="w-full"
+                            presets={page.presets}
                         />
                         <ShareButton page={page} className="w-full" />
                     </div>

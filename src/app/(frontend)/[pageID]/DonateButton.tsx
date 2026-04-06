@@ -1,5 +1,6 @@
 'use client';
 
+import { presetsSchema } from '@db/schema';
 import { CheckoutForm } from '@frontend/[pageID]/CheckoutForm';
 import { stripePromise } from '@lib/stripe/client';
 import { Elements, useElements } from '@stripe/react-stripe-js';
@@ -65,17 +66,31 @@ export const DonateButton = ({
     projectName,
     pageID,
     className = '',
+    presets,
 }: {
     projectName?: string;
     pageID?: string;
     className?: string;
+    presets?: unknown;
 }) => {
     const params = useSearchParams();
     const router = useRouter();
     const [drawerOpen, setDrawerOpen] = useState(false);
 
+    const firstPresetAmount = useMemo(() => {
+        if (
+            Array.isArray(presets) &&
+            presets.length > 0 &&
+            typeof presets[0]?.amount === 'number'
+        ) {
+            return presets[0].amount;
+        }
+        return 1000;
+    }, [presets]);
+
     const [donation, setDonation] = useState<DonationConfig>({
         ...initialDonation,
+        amount: firstPresetAmount,
         projectName: projectName || HappinessConfig.name,
         pageID: pageID || '',
     });
@@ -189,6 +204,7 @@ export const DonateButton = ({
                         checkoutFormRef={checkoutFormRef}
                         setPaymentLoading={setPaymentLoading}
                         currentPage={pagination.currentPage}
+                        presets={presets}
                     />
                 </Elements>
             </Drawer>
@@ -218,6 +234,7 @@ const DonateDrawerInner = ({
     checkoutFormRef,
     setPaymentLoading,
     currentPage,
+    presets,
 }: {
     donation: DonationConfig;
     setDonation: React.Dispatch<React.SetStateAction<DonationConfig>>;
@@ -231,8 +248,22 @@ const DonateDrawerInner = ({
     checkoutFormRef: React.RefObject<HTMLFormElement | null>;
     setPaymentLoading: (v: boolean) => void;
     currentPage: string;
+    presets?: unknown;
 }) => {
     const elements = useElements();
+
+    const parsedPresets = useMemo(() => {
+        const result = presetsSchema.safeParse(presets);
+        return result.success ? result.data : null;
+    }, [presets]);
+
+    const amounts = useMemo(
+        () =>
+            parsedPresets ? parsedPresets.map((p) => p.amount) : AmountPresets,
+        [parsedPresets],
+    );
+
+    const isTierView = parsedPresets?.every((p) => p.name);
 
     // Keep Elements amount in sync with donation total
     useEffect(() => {
@@ -269,49 +300,123 @@ const DonateDrawerInner = ({
                         }}
                     />
                     <div className="flex flex-col gap-2">
-                        <div className="grid grid-cols-3 gap-2">
-                            {AmountPresets.map((amount) => (
+                        {isTierView ? (
+                            <div className="flex flex-col gap-2">
+                                {parsedPresets.map((preset) => (
+                                    <DonationAmountSelector
+                                        selected={
+                                            donation.amount === preset.amount
+                                        }
+                                        key={preset.amount}
+                                        onClick={() => {
+                                            setDonation((d) => ({
+                                                ...d,
+                                                amount: preset.amount,
+                                            }));
+                                            setShowOtherAmount(false);
+                                        }}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <div className="w-full flex justify-between items-center">
+                                            <div className="flex flex-col gap-0.5">
+                                                <Text
+                                                    kind="paragraphSmall"
+                                                    style={{ fontWeight: 600 }}
+                                                >
+                                                    {preset.name}
+                                                </Text>
+                                                {preset.description && (
+                                                    <Text
+                                                        kind="paragraphXSmall"
+                                                        style={{ opacity: 0.7 }}
+                                                    >
+                                                        {preset.description}
+                                                    </Text>
+                                                )}
+                                            </div>
+                                            <Text
+                                                kind="paragraphSmall"
+                                                style={{ fontWeight: 500 }}
+                                            >
+                                                {formatCurrency(
+                                                    preset.amount,
+                                                    0,
+                                                )}
+                                            </Text>
+                                        </div>
+                                    </DonationAmountSelector>
+                                ))}
                                 <DonationAmountSelector
-                                    selected={donation.amount === amount}
-                                    key={amount}
+                                    selected={
+                                        !amounts.includes(donation.amount)
+                                    }
+                                    key="otherAmount"
                                     onClick={() => {
                                         setDonation((d) => ({
                                             ...d,
-                                            amount,
+                                            amount: 0,
                                         }));
-                                        setShowOtherAmount(false);
+                                        setOtherAmountInput('');
+                                        setShowOtherAmount(true);
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        borderStyle: 'dashed',
                                     }}
                                 >
                                     <Text
                                         kind="paragraphSmall"
                                         style={{ fontWeight: 500 }}
                                     >
-                                        {formatCurrency(amount, 0)}
+                                        Other
                                     </Text>
                                 </DonationAmountSelector>
-                            ))}
-                            <DonationAmountSelector
-                                selected={
-                                    !AmountPresets.includes(donation.amount)
-                                }
-                                key="otherAmount"
-                                onClick={() => {
-                                    setDonation((d) => ({
-                                        ...d,
-                                        amount: 0,
-                                    }));
-                                    setOtherAmountInput('');
-                                    setShowOtherAmount(true);
-                                }}
-                            >
-                                <Text
-                                    kind="paragraphSmall"
-                                    style={{ fontWeight: 500 }}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-2">
+                                {amounts.map((amount) => (
+                                    <DonationAmountSelector
+                                        selected={donation.amount === amount}
+                                        key={amount}
+                                        onClick={() => {
+                                            setDonation((d) => ({
+                                                ...d,
+                                                amount,
+                                            }));
+                                            setShowOtherAmount(false);
+                                        }}
+                                    >
+                                        <Text
+                                            kind="paragraphSmall"
+                                            style={{ fontWeight: 500 }}
+                                        >
+                                            {formatCurrency(amount, 0)}
+                                        </Text>
+                                    </DonationAmountSelector>
+                                ))}
+                                <DonationAmountSelector
+                                    selected={
+                                        !amounts.includes(donation.amount)
+                                    }
+                                    key="otherAmount"
+                                    onClick={() => {
+                                        setDonation((d) => ({
+                                            ...d,
+                                            amount: 0,
+                                        }));
+                                        setOtherAmountInput('');
+                                        setShowOtherAmount(true);
+                                    }}
                                 >
-                                    Other
-                                </Text>
-                            </DonationAmountSelector>
-                        </div>
+                                    <Text
+                                        kind="paragraphSmall"
+                                        style={{ fontWeight: 500 }}
+                                    >
+                                        Other
+                                    </Text>
+                                </DonationAmountSelector>
+                            </div>
+                        )}
                         <div
                             className="overflow-clip"
                             style={{
