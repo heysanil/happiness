@@ -65,7 +65,7 @@ export function CancelSubscriptionButton({
                 <div className="flex flex-col gap-5">
                     <Text
                         kind="paragraphSmall"
-                        color={pvar('colors.contentSecondary')}
+                        color={pvar('new.colors.contentSecondary')}
                     >
                         Are you sure you want to cancel this subscription? It
                         will remain active until the end of your current billing
@@ -74,7 +74,7 @@ export function CancelSubscriptionButton({
                     {error && (
                         <Text
                             kind="paragraphSmall"
-                            color={pvar('colors.contentNegative')}
+                            color={pvar('new.colors.contentNegative')}
                         >
                             {error}
                         </Text>

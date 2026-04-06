@@ -15,8 +15,9 @@ const STRIPE_REFUND_WINDOW_DAYS = 180;
 
 export const POST = async (
     request: Request,
-    { params }: { params: { id: string } },
+    props: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> => {
+    const params = await props.params;
     try {
         if (!(await authorize(request, 'root'))) {
             return ErrorResponse.unauthorized().json;

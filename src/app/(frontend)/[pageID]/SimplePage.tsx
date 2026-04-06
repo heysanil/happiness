@@ -20,7 +20,7 @@ const Spacer: FC<{
 }> = ({ hideBelowMd = false }) => (
     <div
         className={clsx('w-full h-[1px]', hideBelowMd && 'hidden md:block')}
-        style={{ backgroundColor: pvar('colors.borderOpaque') }}
+        style={{ backgroundColor: pvar('new.colors.borderMedium') }}
     />
 );
 

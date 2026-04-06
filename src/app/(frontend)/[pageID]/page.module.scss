@@ -1,17 +1,17 @@
 .shallowPopup {
-    box-shadow: var(--pte-lighting-shallowPopup);
+    box-shadow: var(--pte-new-lighting-shallowPopup);
 }
 
 .bgSecondary {
-    background-color: var(--pte-colors-backgroundSecondary);
+    background-color: var(--pte-new-colors-backgroundSecondary);
 }
 
 .bgAccent {
-    background-color: var(--pte-colors-contentAccent);
+    background-color: var(--pte-new-colors-contentAccent);
 }
 
 .divider {
-    border-color: var(--pte-colors-borderOpaque);
+    border-color: var(--pte-new-colors-borderMedium);
     border-width: 0.5px;
 }
 
@@ -31,8 +31,8 @@
     padding: 0 !important;
 
     & img {
-        border-top-left-radius: var(--pte-borders-radius-rounded);
-        border-top-right-radius: var(--pte-borders-radius-rounded);
+        border-top-left-radius: var(--pte-new-borders-radius-rounded);
+        border-top-right-radius: var(--pte-new-borders-radius-rounded);
     }
 
     & h3 {

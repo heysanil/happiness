@@ -5,8 +5,9 @@ import { handleErrors } from '@v1/responses/handleErrors';
 
 export const DELETE = async (
     req: Request,
-    { params }: { params: { subscriptionID: string } },
+    props: { params: Promise<{ subscriptionID: string }> },
 ) => {
+    const params = await props.params;
     try {
         const email = await authorizePortal(req);
         if (!email) {

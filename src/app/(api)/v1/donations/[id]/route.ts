@@ -7,8 +7,9 @@ import { NextResponse } from 'next/server';
 
 export const GET = async (
     request: Request,
-    { params }: { params: { id: string } },
+    props: { params: Promise<{ id: string }> },
 ) => {
+    const params = await props.params;
     try {
         if (!(await authorize(request, 'root'))) {
             return ErrorResponse.unauthorized().json;

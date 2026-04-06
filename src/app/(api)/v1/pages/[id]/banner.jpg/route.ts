@@ -4,8 +4,9 @@ import { NextResponse } from 'next/server';
 
 export const GET = async (
     request: Request,
-    { params }: { params: { id: string } },
+    props: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> => {
+    const params = await props.params;
     try {
         const { id } = params;
         const page = await getPage(id);

@@ -50,7 +50,6 @@ export default async function DashboardPage() {
     }
 
     // Fetch donations if we have a donor
-    // biome-ignore lint/suspicious/noExplicitAny: listDonations return type is complex with conditional includes
     let donationsWithPage: any[] = [];
     if (donor) {
         donationsWithPage = await listDonations({

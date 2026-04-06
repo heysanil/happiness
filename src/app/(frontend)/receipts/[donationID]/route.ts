@@ -6,8 +6,9 @@ import { HappinessConfig } from 'happiness.config';
 
 export const GET = async (
     _req: Request,
-    { params }: { params: { donationID: string } },
+    props: { params: Promise<{ donationID: string }> },
 ) => {
+    const params = await props.params;
     try {
         const donation = await getDonation(params.donationID, {
             include: { page: true, donor: true },
@@ -44,7 +45,7 @@ export const GET = async (
             },
         });
 
-        return new Response(buffer, {
+        return new Response(new Uint8Array(buffer), {
             headers: {
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': `inline; filename="receipt-${donation.id}.pdf"`,

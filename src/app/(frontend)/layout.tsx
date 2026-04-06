@@ -6,6 +6,7 @@ import { HappinessConfig } from 'happiness.config';
 import type { Metadata } from 'next';
 import { generateCSS, theme } from 'paris/theme';
 import { Toast } from 'paris/toast';
+import { Suspense } from 'react';
 import { Themer } from 'src/util/Themer';
 
 export const runtime = 'nodejs';
@@ -21,7 +22,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <head>
                 <link rel="shortcut icon" href={HappinessConfig.favicon} />
                 <link
@@ -34,7 +35,9 @@ export default function RootLayout({
                         __html: generateCSS(theme),
                     }}
                 />
-                <Themer />
+                <Suspense>
+                    <Themer />
+                </Suspense>
             </head>
             <body className="min-h-screen">
                 {children}

@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 body {
-    background-color: var(--pte-colors-backgroundPrimary);
-    color: var(--pte-colors-contentPrimary);
+    background-color: var(--pte-new-colors-backgroundPrimary);
+    color: var(--pte-new-colors-contentPrimary);
     font-family:
         "Graphik Web", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 strong {
-    font-weight: 600;
+    font-weight: 600 !important;
 }
 
 a {
@@ -19,9 +19,9 @@ a {
 }
 
 .subtlePopup {
-    box-shadow: var(--pte-lighting-subtlePopup);
+    box-shadow: var(--pte-new-lighting-subtlePopup);
 }
 
 .shallowPopup {
-    box-shadow: var(--pte-lighting-shallowPopup);
+    box-shadow: var(--pte-new-lighting-shallowPopup);
 }

@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { api } from '../helpers/api-client';
 import {
-    API_KEY,
     BASE_URL,
     SIMPLE_PAGE_SLUG,
     STORY_PAGE_SLUG,

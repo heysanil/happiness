@@ -13,7 +13,7 @@ export const Avatar: FC<{
         style={{
             width: `${width}px`,
             height: `${width}px`,
-            background: pvar('tokens.colors.gradientTeal'),
+            background: pvar('tokens.new.colors.gradientTeal'),
         }}
     >
         <img

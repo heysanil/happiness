@@ -47,14 +47,14 @@ export const StoryPage: FC<{
             )}
             {page.story && (
                 <div className="w-full flex flex-col gap-1">
-                    <ReactMarkdown className={styles.story}>
-                        {page.story}
-                    </ReactMarkdown>
+                    <div className={styles.story}>
+                        <ReactMarkdown>{page.story}</ReactMarkdown>
+                    </div>
                     {embed ? (
                         <Text
                             as="p"
                             kind="paragraphXSmall"
-                            color={pvar('colors.contentTertiary')}
+                            color={pvar('new.colors.contentTertiary')}
                         >
                             {`Organized by ${page.organizer} for ${page.fsProject || HappinessConfig.fiscalSponsorName || HappinessConfig.name}${HappinessConfig.fiscalSponsorMode ? `, a fiscally-sponsored project of ${HappinessConfig.fiscalSponsorName}, a 501(c)(3) public charity with EIN ${HappinessConfig.fiscalSponsorEIN}. Your donation is tax-deductible to the extent allowed by law.` : ''}`}
                         </Text>
@@ -143,7 +143,7 @@ export const StoryPage: FC<{
         </div>
         <Card
             className={clsx(
-                'sticky w-full hidden md:block md:col-span-5 lg:col-span-1',
+                'sticky w-full hidden md:block md:col-span-5 lg:col-span-1 p-4',
                 !embed && 'top-[96px]',
             )}
         >

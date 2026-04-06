@@ -75,7 +75,7 @@
 
 .errorMessage {
     font-size: 13px;
-    font-family: var(--pte-fontFamilies-mono);
+    font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
     color: var(--pte-new-colors-contentSecondary);
     margin-bottom: 8px;
     word-break: break-word;
@@ -83,7 +83,7 @@
 
 .errorStack {
     font-size: 11px;
-    font-family: var(--pte-fontFamilies-mono);
+    font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
     color: var(--pte-new-colors-contentTertiary);
     white-space: pre-wrap;
     word-break: break-word;

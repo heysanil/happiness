@@ -3,10 +3,18 @@
 import '@stoplight/elements/styles.min.css';
 import { useEffect, useState } from 'react';
 
-declare global {
+declare module 'react' {
     namespace JSX {
         interface IntrinsicElements {
-            'elements-api': any;
+            'elements-api': React.DetailedHTMLProps<
+                React.HTMLAttributes<HTMLElement>,
+                HTMLElement
+            > & {
+                apiDescriptionDocument?: string;
+                router?: string;
+                layout?: string;
+                basePath?: string;
+            };
         }
     }
 }

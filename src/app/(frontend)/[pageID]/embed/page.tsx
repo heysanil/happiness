@@ -18,9 +18,10 @@ dayjs.extend(relativeTime);
 export const revalidate = 60;
 
 export async function generateMetadata(
-    { params }: { params: { pageID: string } },
+    props: { params: Promise<{ pageID: string }> },
     _parent: ResolvingMetadata,
 ): Promise<Metadata> {
+    const params = await props.params;
     const { pageID } = params;
     const page = await getPage(pageID);
     return {
@@ -35,11 +36,10 @@ export async function generateMetadata(
     };
 }
 
-export default async function DonationPage({
-    params,
-}: {
-    params: { pageID: string };
+export default async function DonationPage(props: {
+    params: Promise<{ pageID: string }>;
 }) {
+    const params = await props.params;
     const page = await getPage(params.pageID);
     const recentDonations = (await listDonations({
         include: {

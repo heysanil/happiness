@@ -1,14 +1,14 @@
 .DonationAmountSelector {
-    background: var(--pte-colors-backgroundSecondary, #F6F6F6);
-    transition: background-color var(--pte-animations-interaction);
+    background: var(--pte-new-colors-backgroundSecondary, #F6F6F6);
+    transition: background-color var(--pte-new-animations-interaction);
 
     &[data-selected="true"] {
-        background: var(--pte-colors-black, #060606);
-        color: var(--pte-colors-contentInversePrimary, #FFF);
-        box-shadow: var(--pte-lighting-subtlePopup);
+        background: var(--pte-new-tokens-colors-black, #060606);
+        color: var(--pte-new-colors-contentInversePrimary, #FFF);
+        box-shadow: var(--pte-new-lighting-subtlePopup);
     }
 
     &:hover[data-selected="false"] {
-        background: var(--pte-colors-backgroundTertiary, #EDEDED);
+        background: var(--pte-new-colors-surfaceTertiary, #EDEDED);
     }
 }

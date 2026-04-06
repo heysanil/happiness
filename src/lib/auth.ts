@@ -13,7 +13,6 @@ const getRedis = (() => {
     return (): RedisLike => {
         if (!instance) {
             if (process.env.AUTH_REDIS_DRIVER === 'ioredis') {
-                // biome-ignore lint: conditional dynamic import for test Redis
                 const IORedis =
                     require('ioredis').default || require('ioredis');
                 const redisUrl =
@@ -40,7 +39,6 @@ const getRedis = (() => {
                     },
                 };
             } else {
-                // biome-ignore lint: conditional dynamic import for Upstash
                 const { Redis } = require('@upstash/redis');
                 if (
                     !process.env.UPSTASH_REDIS_REST_URL ||

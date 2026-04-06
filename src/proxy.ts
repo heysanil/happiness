@@ -1,4 +1,4 @@
-import type { NextMiddleware } from 'next/server';
+import type { NextProxy } from 'next/server';
 import { NextResponse } from 'next/server';
 
 const alwaysBypass = {
@@ -8,7 +8,7 @@ const alwaysBypass = {
     contains: [],
 };
 
-export const middleware: NextMiddleware = async (req) => {
+export const proxy: NextProxy = async (req) => {
     // Bypass the middleware for the following paths
     if (
         alwaysBypass.equals.some((path) => req.nextUrl.pathname === path) ||
