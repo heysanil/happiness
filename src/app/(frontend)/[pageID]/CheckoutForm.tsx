@@ -6,13 +6,14 @@ import {
 import {
     PaymentElement,
     ExpressCheckoutElement,
+    LinkAuthenticationElement,
     useStripe,
     useElements,
 } from '@stripe/react-stripe-js';
 import type {
     StripeExpressCheckoutElementConfirmEvent,
+    StripeLinkAuthenticationElementChangeEvent,
 } from '@stripe/stripe-js';
-import { Input } from 'paris/input';
 import { Text } from 'paris/text';
 import { formatCurrency } from 'src/util/formatCurrency';
 import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
@@ -25,14 +26,14 @@ HTMLFormElement,
     onSuccess: () => void;
     returnUrl: string;
     onLoadingChange?: (loading: boolean) => void;
-    onEmailChange: (email: string) => void;
+    onBillingChange: (fields: { email?: string; donorName?: string }) => void;
 }
 >(({
             donation,
             onSuccess,
             returnUrl,
             onLoadingChange,
-            onEmailChange,
+            onBillingChange,
         }, ref) => {
             const stripe = useStripe();
             const elements = useElements();
@@ -49,8 +50,14 @@ HTMLFormElement,
                 onLoadingChange?.(loading);
             }, [loading, onLoadingChange]);
 
-            const createIntentAndConfirm = async () => {
+            const createIntentAndConfirm = async (billingOverrides?: {
+                email?: string;
+                name?: string;
+            }) => {
                 if (!stripe || !elements) return;
+
+                const email = billingOverrides?.email || donation.email;
+                const name = billingOverrides?.name || donation.donorName;
 
                 const { error: submitError } = await elements.submit();
                 if (submitError) {
@@ -63,6 +70,8 @@ HTMLFormElement,
                     body: JSON.stringify({
                         ...donation,
                         amount: donation.amount + feeAmount,
+                        email,
+                        donorName: name,
                     }),
                 });
 
@@ -78,10 +87,11 @@ HTMLFormElement,
                     clientSecret,
                     confirmParams: {
                         return_url: returnUrl,
-                        receipt_email: donation.email,
+                        receipt_email: email,
                         payment_method_data: {
                             billing_details: {
-                                email: donation.email,
+                                email,
+                                name: name || undefined,
                             },
                         },
                     },
@@ -113,7 +123,10 @@ HTMLFormElement,
                 setLoading(true);
                 setError(null);
                 try {
-                    await createIntentAndConfirm();
+                    await createIntentAndConfirm({
+                        email: event.billingDetails?.email || undefined,
+                        name: event.billingDetails?.name || undefined,
+                    });
                 } catch (err) {
                     event.paymentFailed({ reason: 'fail' });
                     setError(err instanceof Error ? err.message : 'Payment failed.');
@@ -159,17 +172,6 @@ HTMLFormElement,
                         </div>
                     </div>
 
-                    <Input
-                        label="Email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={donation.email}
-                        required
-                        onChange={(e) => {
-                            onEmailChange(e.target.value);
-                        }}
-                    />
-
                     <div style={{ display: expressCheckoutAvailable ? undefined : 'none' }}>
                         <ExpressCheckoutElement
                             onConfirm={handleExpressConfirm}
@@ -179,6 +181,7 @@ HTMLFormElement,
                                 }
                             }}
                             options={{
+                                emailRequired: true,
                                 buttonType: {
                                     applePay: 'donate',
                                     googlePay: 'donate',
@@ -206,7 +209,16 @@ HTMLFormElement,
                         </div>
                     )}
 
-                    <PaymentElement options={{ layout: 'accordion' }} />
+                    <LinkAuthenticationElement
+                        onChange={(e: StripeLinkAuthenticationElementChangeEvent) => {
+                            onBillingChange({ email: e.value.email });
+                        }}
+                    />
+
+                    <PaymentElement options={{
+                        layout: 'accordion',
+                        fields: { billingDetails: { name: 'auto' } },
+                    }} />
 
                     {error && (
                         <Text kind="paragraphXSmall" style={{ color: 'var(--pte-colors-contentNegative, #dc2626)' }}>

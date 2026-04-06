@@ -54,6 +54,7 @@ const initialDonation: DonationConfig = {
     pageID: '',
     tipPercent: 0.1,
     email: '',
+    donorName: '',
 };
 
 /** Compute the total amount in cents for a given donation config */
@@ -449,7 +450,7 @@ const DonateDrawerInner = ({
                         onSuccess={onSuccess}
                         returnUrl={returnUrl}
                         onLoadingChange={setPaymentLoading}
-                        onEmailChange={(email) => setDonation((d) => ({ ...d, email }))}
+                        onBillingChange={(fields) => setDonation((d) => ({ ...d, ...fields }))}
                     />
                 </div>
             )}

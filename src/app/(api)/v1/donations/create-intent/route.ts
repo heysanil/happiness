@@ -25,6 +25,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             tipAmount: `${tipAmount}`,
             donationID,
             email: validated.email,
+            donorName: validated.donorName || '',
             ...validated.message ? { message: validated.message } : {},
         };
 
@@ -60,6 +61,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
         const customer = await stripe.customers.create({
             email: validated.email,
+            name: validated.donorName || undefined,
             metadata: { createdByHappiness: 'true' },
         });
 
