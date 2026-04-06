@@ -1,17 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
-import { Text } from 'paris/text';
 import { Button } from 'paris/button';
+import { Text } from 'paris/text';
+import { useEffect } from 'react';
 import { DebugMode } from 'src/constants';
-import { HappinessError } from 'src/util/HappinessError';
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Next.js error page convention
 export default function Error({
     error,
     reset,
 }: {
-    error: Error,
-    reset: () => void,
+    error: Error;
+    reset: () => void;
 }) {
     useEffect(() => {
         console.error(error);
@@ -25,13 +25,9 @@ export default function Error({
             <Text as="p" kind="paragraphMedium">
                 {error.message}
             </Text>
-            {DebugMode && (
-                <pre>{error.stack}</pre>
-            )}
+            {DebugMode && <pre>{error.stack}</pre>}
             <div>
-                <Button onClick={() => reset()}>
-                    Try again
-                </Button>
+                <Button onClick={() => reset()}>Try again</Button>
             </div>
         </div>
     );

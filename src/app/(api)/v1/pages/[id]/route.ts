@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
+import { deletePage } from '@db/ops/pages/deletePage';
 import { getPage } from '@db/ops/pages/getPage';
 import { updatePage } from '@db/ops/pages/updatePage';
-import { deletePage } from '@db/ops/pages/deletePage';
-import { handleErrors } from '@v1/responses/handleErrors';
-import { ErrorResponse } from '@v1/responses/ErrorResponse';
 import { authorize } from '@v1/middleware/authorize';
+import { ErrorResponse } from '@v1/responses/ErrorResponse';
+import { handleErrors } from '@v1/responses/handleErrors';
+import { NextResponse } from 'next/server';
 
 export const GET = async (
-    request: Request,
+    _request: Request,
     { params }: { params: { id: string } },
 ): Promise<NextResponse> => {
     try {
@@ -23,7 +23,7 @@ export const PATCH = async (
     { params }: { params: { id: string } },
 ): Promise<NextResponse> => {
     try {
-        if (!await authorize(request, 'root')) {
+        if (!(await authorize(request, 'root'))) {
             return ErrorResponse.unauthorized().json;
         }
 
@@ -41,7 +41,7 @@ export const DELETE = async (
     { params }: { params: { id: string } },
 ): Promise<NextResponse> => {
     try {
-        if (!await authorize(request, 'root')) {
+        if (!(await authorize(request, 'root'))) {
             return ErrorResponse.unauthorized().json;
         }
 

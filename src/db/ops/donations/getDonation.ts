@@ -1,11 +1,14 @@
 import { db } from '@db/init';
 import { validateID, validateReturn } from '@db/ops/shared';
 import {
-    donations, selectDonationSchema, selectDonorSchema, selectPageSchema,
+    donations,
+    selectDonationSchema,
+    selectDonorSchema,
+    selectPageSchema,
 } from '@db/schema';
-import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { HappinessError } from 'src/util/HappinessError';
+import { z } from 'zod';
 
 /**
  * Gets a donation by ID.
@@ -21,7 +24,7 @@ export const getDonation = async (
             donor?: boolean;
             /** Whether to include the page in the query. */
             page?: boolean;
-        }
+        };
     },
 ) => {
     await validateID('Donation', id);
@@ -38,10 +41,15 @@ export const getDonation = async (
         throw new HappinessError('No such donation found', 404, { id });
     }
 
-    return validateReturn(selectDonationSchema.merge(
-        z.object({
-            ...options?.include?.donor ? { donor: selectDonorSchema } : {},
-            ...options?.include?.page ? { page: selectPageSchema } : {},
-        }),
-    ), query);
+    return validateReturn(
+        selectDonationSchema.merge(
+            z.object({
+                ...(options?.include?.donor
+                    ? { donor: selectDonorSchema }
+                    : {}),
+                ...(options?.include?.page ? { page: selectPageSchema } : {}),
+            }),
+        ),
+        query,
+    );
 };

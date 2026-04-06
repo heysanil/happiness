@@ -1,15 +1,13 @@
-import type { OperationObject } from 'openapi3-ts/oas30';
-import { errorResponses } from '@docs/oas/shared/errorResponses';
 import { IncludeParam } from '@docs/oas/schemas/include';
 import { security } from '@docs/oas/schemas/security';
+import { errorResponses } from '@docs/oas/shared/errorResponses';
+import type { OperationObject } from 'openapi3-ts/oas30';
 
 export const DONATIONS_ID_GET_SCHEMA: OperationObject = {
     operationId: 'getDonation',
     summary: 'Get a donation',
     description: 'Gets a specific donation.',
-    tags: [
-        'Donations',
-    ],
+    tags: ['Donations'],
     parameters: [
         {
             $ref: '#/components/parameters/id',

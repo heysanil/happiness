@@ -1,43 +1,34 @@
-import { Fragment } from 'react';
-import type { FC } from 'react';
 import type { Donation, Donor, Page } from '@db/schema';
-import clsx from 'clsx';
 import { Banner } from '@frontend/[pageID]/Banner';
-import { Avatar } from 'src/components/Avatar';
-import { Text } from 'paris/text';
-import { pvar } from 'paris/theme';
 import { DonateButton } from '@frontend/[pageID]/DonateButton';
 import { ShareButton } from '@frontend/[pageID]/ShareButton';
+import clsx from 'clsx';
 import { HappinessConfig } from 'happiness.config';
-import { formatCurrency } from 'src/util/formatCurrency';
+import { Text } from 'paris/text';
+import { pvar } from 'paris/theme';
+import type { FC } from 'react';
+import { Fragment } from 'react';
 import ReactMarkdown from 'react-markdown';
 import SparkMD5 from 'spark-md5';
+import { Avatar } from 'src/components/Avatar';
+import { formatCurrency } from 'src/util/formatCurrency';
 
 const RECENT_DONATION_COUNT = 5;
 
 const Spacer: FC<{
-    hideBelowMd?: boolean,
-}> = ({
-    hideBelowMd = false,
-}) => (
+    hideBelowMd?: boolean;
+}> = ({ hideBelowMd = false }) => (
     <div
-        className={clsx(
-            'w-full h-[1px]',
-            hideBelowMd && 'hidden md:block',
-        )}
+        className={clsx('w-full h-[1px]', hideBelowMd && 'hidden md:block')}
         style={{ backgroundColor: pvar('colors.borderOpaque') }}
     />
 );
 
 export const SimplePage: FC<{
-    page: Page,
-    recentDonations: Array<Donation & { donor: Donor }>,
-    relatedPages?: Page[],
-}> = ({
-    page,
-    recentDonations,
-    relatedPages = [],
-}) => (
+    page: Page;
+    recentDonations: Array<Donation & { donor: Donor }>;
+    relatedPages?: Page[];
+}> = ({ page, recentDonations, relatedPages: _relatedPages = [] }) => (
     <>
         <div className="col-span-full w-full flex flex-col gap-[30px]">
             {page.bannerType && page.bannerURL && (
@@ -69,7 +60,11 @@ export const SimplePage: FC<{
 
                 {/* Page title + buttons */}
                 <div className="w-full flex flex-col md:flex-row gap-[30px] md:gap-4 justify-start md:justify-between items-start md:items-center">
-                    <Text as="h1" kind="displayMedium" className="hidden md:block">
+                    <Text
+                        as="h1"
+                        kind="displayMedium"
+                        className="hidden md:block"
+                    >
                         {page.title}
                     </Text>
                     <Text as="h1" kind="displaySmall" className="md:hidden">
@@ -78,14 +73,16 @@ export const SimplePage: FC<{
 
                     <div className="w-full md:w-[280px] flex flex-col md:flex-row gap-3">
                         <DonateButton
-                            projectName={page.fsProject || page.organizer || HappinessConfig.fiscalSponsorName || HappinessConfig.name}
+                            projectName={
+                                page.fsProject ||
+                                page.organizer ||
+                                HappinessConfig.fiscalSponsorName ||
+                                HappinessConfig.name
+                            }
                             pageID={page.id}
                             className="w-full"
                         />
-                        <ShareButton
-                            page={page}
-                            className="w-full"
-                        />
+                        <ShareButton page={page} className="w-full" />
                     </div>
                 </div>
             </div>
@@ -101,21 +98,20 @@ export const SimplePage: FC<{
                         {page.subtitle}
                     </Text>
                     {page.story && (
-                        <ReactMarkdown key="story">
-                            {page.story}
-                        </ReactMarkdown>
+                        <ReactMarkdown key="story">{page.story}</ReactMarkdown>
                     )}
                     {HappinessConfig.fiscalSponsorMode && (
                         <Text key="fiscal" as="p" kind="paragraphXSmall">
-                            {page.fsProject || page.title || HappinessConfig.fiscalSponsorName || HappinessConfig.name}
-                            {' '}
-                            is a fiscally-sponsored project of
-                            {' '}
-                            {HappinessConfig.fiscalSponsorName}
-                            , a 501(c)(3) non-profit organization (EIN:
-                            {' '}
+                            {page.fsProject ||
+                                page.title ||
+                                HappinessConfig.fiscalSponsorName ||
+                                HappinessConfig.name}{' '}
+                            is a fiscally-sponsored project of{' '}
+                            {HappinessConfig.fiscalSponsorName}, a 501(c)(3)
+                            non-profit organization (EIN:{' '}
                             {HappinessConfig.fiscalSponsorEIN}
-                            ). Contributions are tax-deductible to the extent permitted by law.
+                            ). Contributions are tax-deductible to the extent
+                            permitted by law.
                         </Text>
                     )}
                 </div>
@@ -127,39 +123,75 @@ export const SimplePage: FC<{
                             Recent donors
                         </Text>
                         <div className="w-full flex flex-col gap-3">
-                            {recentDonations.slice(0, RECENT_DONATION_COUNT).map((donation, index) => (
-                                <Fragment key={`donation-${donation.id}-fragment`}>
-                                    <div key={`donation-${donation.id}`} className="flex flex-col gap-3">
-                                        <div className="w-full flex flex-row justify-between items-center">
-                                            <div className="flex flex-row gap-3 items-center">
-                                                <div className="w-[24px] h-[24px] shrink-0 rounded-full bg-gray-200">
-                                                    <img
-                                                        src={donation.visible ? `https://www.gravatar.com/avatar/${SparkMD5.hash((donation.donor as Donor).email)}?s=64&d=${encodeURIComponent('https://fast.slingshot.fm/sling/static/profile.png')}` : 'https://fast.slingshot.fm/sling/static/profile.png'}
-                                                        alt="Donor avatar"
-                                                        className="w-full h-full rounded-full"
-                                                    />
+                            {recentDonations
+                                .slice(0, RECENT_DONATION_COUNT)
+                                .map((donation, index) => (
+                                    <Fragment
+                                        key={`donation-${donation.id}-fragment`}
+                                    >
+                                        <div
+                                            key={`donation-${donation.id}`}
+                                            className="flex flex-col gap-3"
+                                        >
+                                            <div className="w-full flex flex-row justify-between items-center">
+                                                <div className="flex flex-row gap-3 items-center">
+                                                    <div className="w-[24px] h-[24px] shrink-0 rounded-full bg-gray-200">
+                                                        <img
+                                                            src={
+                                                                donation.visible
+                                                                    ? `https://www.gravatar.com/avatar/${SparkMD5.hash((donation.donor as Donor).email)}?s=64&d=${encodeURIComponent('https://fast.slingshot.fm/sling/static/profile.png')}`
+                                                                    : 'https://fast.slingshot.fm/sling/static/profile.png'
+                                                            }
+                                                            alt="Donor avatar"
+                                                            className="w-full h-full rounded-full"
+                                                        />
+                                                    </div>
+                                                    <Text
+                                                        as="p"
+                                                        kind="paragraphMedium"
+                                                        weight="medium"
+                                                    >
+                                                        {donation.visible
+                                                            ? `${(donation.donor as Donor).firstName} ${(donation.donor as Donor).lastName.charAt(0)}.`
+                                                            : 'Anonymous'}
+                                                    </Text>
                                                 </div>
-                                                <Text as="p" kind="paragraphMedium" weight="medium">
-                                                    {donation.visible ? `${(donation.donor as Donor).firstName} ${(donation.donor as Donor).lastName.charAt(0)}.` : 'Anonymous'}
+                                                <Text
+                                                    as="p"
+                                                    kind="paragraphMedium"
+                                                    weight="medium"
+                                                >
+                                                    {formatCurrency(
+                                                        donation.amount,
+                                                        0,
+                                                        donation.amountCurrency ||
+                                                            'usd',
+                                                    )}
+                                                    {/* {' · '} */}
+                                                    {/* {dayjs(donation.createdAt).fromNow()} */}
                                                 </Text>
                                             </div>
-                                            <Text as="p" kind="paragraphMedium" weight="medium">
-                                                {formatCurrency(donation.amount, 0, donation.amountCurrency || 'usd')}
-                                                {/* {' · '} */}
-                                                {/* {dayjs(donation.createdAt).fromNow()} */}
-                                            </Text>
+                                            {donation.message && (
+                                                <Text
+                                                    as="p"
+                                                    kind="paragraphXSmall"
+                                                >
+                                                    {donation.message}
+                                                </Text>
+                                            )}
                                         </div>
-                                        {donation.message && (
-                                            <Text as="p" kind="paragraphXSmall">
-                                                {donation.message}
-                                            </Text>
+                                        {index <
+                                            Math.min(
+                                                RECENT_DONATION_COUNT,
+                                                recentDonations.length,
+                                            ) -
+                                                1 && (
+                                            <Spacer
+                                                key={`spacer-${donation.id}`}
+                                            />
                                         )}
-                                    </div>
-                                    {index < (Math.min(RECENT_DONATION_COUNT, recentDonations.length) - 1) && (
-                                        <Spacer key={`spacer-${donation.id}`} />
-                                    )}
-                                </Fragment>
-                            ))}
+                                    </Fragment>
+                                ))}
                         </div>
                     </div>
                 )}

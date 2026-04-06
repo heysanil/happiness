@@ -1,7 +1,7 @@
+import { createDonationCheckout } from '@lib/stripe/createDonationCheckout';
 import { handleErrors } from '@v1/responses/handleErrors';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createDonationCheckout } from '@lib/stripe/createDonationCheckout';
 import { generateID, Prefixes } from 'src/util/generateID';
 
 export const GET = async (request: NextRequest) => {

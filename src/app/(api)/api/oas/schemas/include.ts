@@ -1,8 +1,6 @@
 import type { ParameterObject } from 'openapi3-ts/oas30';
 
-export const IncludeParam = (
-    relationsAllowed: string[],
-): ParameterObject => ({
+export const IncludeParam = (relationsAllowed: string[]): ParameterObject => ({
     name: 'include',
     in: 'query',
     description: 'Include relations in the response.',

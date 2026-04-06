@@ -1,6 +1,6 @@
+import * as schema from '@db/schema';
 import { connect } from '@planetscale/database';
 import { drizzle } from 'drizzle-orm/planetscale-serverless';
-import * as schema from '@db/schema';
 
 if (!process.env.DATABASE_URL) {
     throw new Error('Please set the DATABASE_URL environment variable');

@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
+import { db } from '@db/init';
+import { listDonations } from '@db/ops/donations/listDonations';
+import { getPage } from '@db/ops/pages/getPage';
+import { updatePage } from '@db/ops/pages/updatePage';
+import { donations } from '@db/schema';
+import { refundPaymentIntent } from '@lib/stripe/refundPaymentIntent';
 import { authorize } from '@v1/middleware/authorize';
 import { ErrorResponse } from '@v1/responses/ErrorResponse';
 import { handleErrors } from '@v1/responses/handleErrors';
-import { getPage } from '@db/ops/pages/getPage';
-import { updatePage } from '@db/ops/pages/updatePage';
-import { listDonations } from '@db/ops/donations/listDonations';
-import { refundPaymentIntent } from '@lib/stripe/refundPaymentIntent';
-import { db } from '@db/init';
-import { donations } from '@db/schema';
 import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 
 const STRIPE_REFUND_WINDOW_DAYS = 180;
 
@@ -17,7 +17,7 @@ export const POST = async (
     { params }: { params: { id: string } },
 ): Promise<NextResponse> => {
     try {
-        if (!await authorize(request, 'root')) {
+        if (!(await authorize(request, 'root'))) {
             return ErrorResponse.unauthorized().json;
         }
 
@@ -32,27 +32,46 @@ export const POST = async (
         });
 
         const refundCutoff = new Date();
-        refundCutoff.setDate(refundCutoff.getDate() - STRIPE_REFUND_WINDOW_DAYS);
+        refundCutoff.setDate(
+            refundCutoff.getDate() - STRIPE_REFUND_WINDOW_DAYS,
+        );
 
         const skippedAlreadyRefunded = allDonations
             .filter((d) => d.refunded)
             .map((d) => d.id);
 
         const skippedNoTransaction = allDonations
-            .filter((d) => !d.refunded && (!d.externalTransactionID || d.externalTransactionProvider !== 'stripe'))
+            .filter(
+                (d) =>
+                    !d.refunded &&
+                    (!d.externalTransactionID ||
+                        d.externalTransactionProvider !== 'stripe'),
+            )
             .map((d) => d.id);
 
         const skippedTooOld = allDonations
-            .filter((d) => !d.refunded && d.externalTransactionID && d.externalTransactionProvider === 'stripe' && d.createdAt < refundCutoff)
+            .filter(
+                (d) =>
+                    !d.refunded &&
+                    d.externalTransactionID &&
+                    d.externalTransactionProvider === 'stripe' &&
+                    d.createdAt < refundCutoff,
+            )
             .map((d) => d.id);
 
-        const refundable = allDonations
-            .filter((d) => !d.refunded && d.externalTransactionID && d.externalTransactionProvider === 'stripe' && d.createdAt >= refundCutoff);
+        const refundable = allDonations.filter(
+            (d) =>
+                !d.refunded &&
+                d.externalTransactionID &&
+                d.externalTransactionProvider === 'stripe' &&
+                d.createdAt >= refundCutoff,
+        );
 
         const refundResults = await Promise.allSettled(
             refundable.map(async (donation) => {
                 await refundPaymentIntent(donation.externalTransactionID!);
-                await db.update(donations)
+                await db
+                    .update(donations)
                     .set({ refunded: true })
                     .where(eq(donations.id, donation.id));
                 return donation;
@@ -67,7 +86,10 @@ export const POST = async (
                 } else {
                     acc.failed.push({
                         id: refundable[i].id,
-                        error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+                        error:
+                            result.reason instanceof Error
+                                ? result.reason.message
+                                : 'Unknown error',
                     });
                 }
                 return acc;

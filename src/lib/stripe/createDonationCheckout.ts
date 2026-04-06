@@ -1,8 +1,7 @@
 import { stripe } from '@lib/stripe/index';
-import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
+import { DonationConfigSchema } from '@v1/donations/checkout/DonationConfig';
 import { HappinessConfig } from 'happiness.config';
 import { HappinessError } from 'src/util/HappinessError';
-import { DonationConfigSchema } from '@v1/donations/checkout/DonationConfig';
 
 /**
  * Creates a Stripe Checkout session for a donation. Returns the URL for the checkout.
@@ -42,7 +41,7 @@ export const createDonationCheckout = async (
         pageID: validated.pageID,
         visible: `${!validated.anonymous}`,
         tipAmount: `${Math.round(validated.tipPercent * validated.amount)}`,
-        ...validated.message ? { message: validated.message } : {},
+        ...(validated.message ? { message: validated.message } : {}),
     };
 
     // Create the checkout session
@@ -56,19 +55,25 @@ export const createDonationCheckout = async (
                         name: 'Donation',
                         description: `Donation to ${validated.projectName}`,
                     },
-                    ...(isRecurring ? { recurring: { interval: 'month' } } : {}),
+                    ...(isRecurring
+                        ? { recurring: { interval: 'month' } }
+                        : {}),
                 },
                 quantity: 1,
             },
             {
                 price_data: {
-                    unit_amount: Math.round(validated.tipPercent * validated.amount),
+                    unit_amount: Math.round(
+                        validated.tipPercent * validated.amount,
+                    ),
                     currency: 'usd',
                     product_data: {
                         name: 'Tip',
                         description: `Supporting ${HappinessConfig.name}`,
                     },
-                    ...(isRecurring ? { recurring: { interval: 'month' } } : {}),
+                    ...(isRecurring
+                        ? { recurring: { interval: 'month' } }
+                        : {}),
                 },
                 quantity: 1,
             },
@@ -77,37 +82,46 @@ export const createDonationCheckout = async (
         success_url: successURLWithSessionID.toString(),
         cancel_url: cancelURL,
         client_reference_id: donationID,
-        ...!isRecurring ? {
-            invoice_creation: {
-                enabled: true,
-                invoice_data: {
-                    description: `Donation to ${validated.projectName}`,
-                    custom_fields: [{ name: 'EIN', value: HappinessConfig.fiscalSponsorEIN }],
-                    footer: HappinessConfig.fiscalSponsorMode
-                        ? `${validated.projectName} is a fiscally-sponsored nonprofit project of ${HappinessConfig.fiscalSponsorName}, a 501(c)(3) public charity. Your donation is tax-deductible to the extent allowed by law.`
-                        : `Your donation is processed by ${HappinessConfig.name}, the platform that ${validated.projectName} is using to raise money.`,
-                    metadata: {
-                        ...metadata,
-                        donationID,
-                    },
-                },
-            },
-            submit_type: 'donate',
-            payment_intent_data: {
-                metadata: {
-                    ...metadata,
-                    donationID,
-                },
-            },
-            customer_creation: 'always',
-        } : {},
-        ...isRecurring ? {
-            subscription_data: {
-                metadata: {
-                    ...metadata,
-                },
-            },
-        } : {},
+        ...(!isRecurring
+            ? {
+                  invoice_creation: {
+                      enabled: true,
+                      invoice_data: {
+                          description: `Donation to ${validated.projectName}`,
+                          custom_fields: [
+                              {
+                                  name: 'EIN',
+                                  value: HappinessConfig.fiscalSponsorEIN,
+                              },
+                          ],
+                          footer: HappinessConfig.fiscalSponsorMode
+                              ? `${validated.projectName} is a fiscally-sponsored nonprofit project of ${HappinessConfig.fiscalSponsorName}, a 501(c)(3) public charity. Your donation is tax-deductible to the extent allowed by law.`
+                              : `Your donation is processed by ${HappinessConfig.name}, the platform that ${validated.projectName} is using to raise money.`,
+                          metadata: {
+                              ...metadata,
+                              donationID,
+                          },
+                      },
+                  },
+                  submit_type: 'donate',
+                  payment_intent_data: {
+                      metadata: {
+                          ...metadata,
+                          donationID,
+                      },
+                  },
+                  customer_creation: 'always',
+              }
+            : {}),
+        ...(isRecurring
+            ? {
+                  subscription_data: {
+                      metadata: {
+                          ...metadata,
+                      },
+                  },
+              }
+            : {}),
         custom_text: {
             submit: {
                 message: HappinessConfig.fiscalSponsorMode
@@ -121,7 +135,12 @@ export const createDonationCheckout = async (
         },
     });
 
-    if (!checkout.url) throw new HappinessError('Stripe checkout session URL not found.', 500, { checkout });
+    if (!checkout.url)
+        throw new HappinessError(
+            'Stripe checkout session URL not found.',
+            500,
+            { checkout },
+        );
 
     return checkout.url;
 };

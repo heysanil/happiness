@@ -1,25 +1,29 @@
-import { NextResponse } from 'next/server';
-import { handleErrors } from '@v1/responses/handleErrors';
-import { stripe } from '@lib/stripe';
-import { z } from 'zod';
-import type { Stripe } from 'stripe';
-import { Prefixes } from 'src/util/generateID';
 import { getPage } from '@db/ops/pages/getPage';
+import { stripe } from '@lib/stripe';
+import { handleErrors } from '@v1/responses/handleErrors';
+import { NextResponse } from 'next/server';
+import { Prefixes } from 'src/util/generateID';
+import type { Stripe } from 'stripe';
+import { z } from 'zod';
 
 export const GET = async (request: Request) => {
     try {
         const { searchParams } = new URL(request.url);
         const body = Object.fromEntries(searchParams.entries());
-        const parsed = await z.object({
-            session_id: z.string(),
-        }).parseAsync(body);
+        const parsed = await z
+            .object({
+                session_id: z.string(),
+            })
+            .parseAsync(body);
 
         const cs = await stripe.checkout.sessions.retrieve(parsed.session_id, {
             expand: ['customer'],
         });
 
         // Get the page ID from the metadata.
-        const metadata = await z.object({ pageID: z.string().startsWith(Prefixes.Page) }).spa(cs.metadata);
+        const metadata = await z
+            .object({ pageID: z.string().startsWith(Prefixes.Page) })
+            .spa(cs.metadata);
 
         const redirect = new URL(request.url);
 

@@ -1,8 +1,8 @@
+import { DebugMode } from 'src/constants';
 import { Prefixes } from 'src/util/generateID';
 import { HappinessError } from 'src/util/HappinessError';
-import { z } from 'zod';
 import type { ZodType, ZodTypeDef } from 'zod';
-import { DebugMode } from 'src/constants';
+import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 
 /**
@@ -20,11 +20,22 @@ export const validateID = async (
     },
 ) => {
     if (!id && !options?.allowFalsy) {
-        throw new HappinessError(`Missing ${resourceType.toLowerCase()} ID`, 400, { id });
+        throw new HappinessError(
+            `Missing ${resourceType.toLowerCase()} ID`,
+            400,
+            { id },
+        );
     } else if (id) {
-        const validation = await z.string().startsWith(`${Prefixes[resourceType]}_`).spa(id);
+        const validation = await z
+            .string()
+            .startsWith(`${Prefixes[resourceType]}_`)
+            .spa(id);
         if (!validation.success) {
-            throw new HappinessError(`Invalid ${resourceType.toLowerCase()} ID`, 400, { id, validation });
+            throw new HappinessError(
+                `Invalid ${resourceType.toLowerCase()} ID`,
+                400,
+                { id, validation },
+            );
         }
     }
 };
@@ -60,7 +71,11 @@ export const validateReturn = async <A, B extends ZodTypeDef, C>(
             }
 
             // Print a warning.
-            console.warn('WARNING - Return object validation failed.', fromZodError(validate.error).toString(), { error: validate.error, returnObject });
+            console.warn(
+                'WARNING - Return object validation failed.',
+                fromZodError(validate.error).toString(),
+                { error: validate.error, returnObject },
+            );
         } else {
             // Return the validated data.
             return validate.data as z.infer<typeof schema>;

@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { NextResponse } from 'next/server';
 import { HappinessResponse } from '@v1/responses/HappinessResponse';
+import type { NextResponse } from 'next/server';
 import { DebugMode } from 'src/constants';
 
 /**
@@ -17,13 +16,17 @@ export class ErrorResponse extends HappinessResponse {
         /** The debug information to return in non-production environments */
         public debug?: Record<string, any>,
     ) {
-        super(status, {
-            'Content-Type': 'application/json',
-        }, HappinessResponse.stringify({
+        super(
             status,
-            message,
-            ...(DebugMode ? { debug } : {}),
-        }));
+            {
+                'Content-Type': 'application/json',
+            },
+            HappinessResponse.stringify({
+                status,
+                message,
+                ...(DebugMode ? { debug } : {}),
+            }),
+        );
     }
 
     /**
@@ -82,7 +85,10 @@ export class ErrorResponse extends HappinessResponse {
      * @param message - The message to return
      * @param debug - The debug information to return
      */
-    static methodNotAllowed(message = 'Method not allowed', debug?: Record<string, any>) {
+    static methodNotAllowed(
+        message = 'Method not allowed',
+        debug?: Record<string, any>,
+    ) {
         return new ErrorResponse(405, message, debug);
     }
 
@@ -94,7 +100,10 @@ export class ErrorResponse extends HappinessResponse {
      * @param message - The message to return
      * @param debug - The debug information to return
      */
-    static unprocessableEntity(message = 'Unprocessable entity', debug?: Record<string, any>) {
+    static unprocessableEntity(
+        message = 'Unprocessable entity',
+        debug?: Record<string, any>,
+    ) {
         return new ErrorResponse(422, message, debug);
     }
 
@@ -106,7 +115,10 @@ export class ErrorResponse extends HappinessResponse {
      * @param message - The message to return
      * @param debug - The debug information to return
      */
-    static internalServerError(message = 'Internal server error', debug?: Record<string, any>) {
+    static internalServerError(
+        message = 'Internal server error',
+        debug?: Record<string, any>,
+    ) {
         return new ErrorResponse(500, message, debug);
     }
 
@@ -118,7 +130,10 @@ export class ErrorResponse extends HappinessResponse {
      * @param message - The message to return
      * @param debug - The debug information to return
      */
-    static notImplemented(message = 'Not implemented', debug?: Record<string, any>) {
+    static notImplemented(
+        message = 'Not implemented',
+        debug?: Record<string, any>,
+    ) {
         return new ErrorResponse(501, message, debug);
     }
 }

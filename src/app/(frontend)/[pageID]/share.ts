@@ -1,6 +1,6 @@
-import { toast } from 'paris/toast';
 import type { Page } from '@db/schema';
 import { HappinessConfig } from 'happiness.config';
+import { toast } from 'paris/toast';
 
 export const share = async (page: Page) => {
     if (typeof window !== 'undefined') {

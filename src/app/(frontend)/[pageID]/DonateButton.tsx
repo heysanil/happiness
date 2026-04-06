@@ -1,32 +1,28 @@
 'use client';
 
-import {
-    useCallback, useEffect, useMemo, useRef, useState,
-} from 'react';
-import {
-    useSearchParams, useRouter,
-} from 'next/navigation';
-import {
-    Elements, useStripe, useElements,
-} from '@stripe/react-stripe-js';
-import { Button } from 'paris/button';
-import { Drawer } from 'paris/drawer';
-import { Text } from 'paris/text';
-import { ButtonGroup } from 'src/components/ButtonGroup';
-import { formatCurrency } from 'src/util/formatCurrency';
-import { Input } from 'paris/input';
-import { TextArea } from 'paris/textarea';
-import { Checkbox } from 'paris/checkbox';
-import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
-import { estimateFee, FrequencyOptions } from '@v1/donations/checkout/DonationConfig';
-import { HappinessConfig } from 'happiness.config';
-import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
-import { stripePromise } from '@lib/stripe/client';
 import { CheckoutForm } from '@frontend/[pageID]/CheckoutForm';
-import { usePagination } from 'paris/pagination';
-
+import { stripePromise } from '@lib/stripe/client';
+import { Elements, useElements } from '@stripe/react-stripe-js';
+import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
+import {
+    estimateFee,
+    FrequencyOptions,
+} from '@v1/donations/checkout/DonationConfig';
 import clsx from 'clsx';
+import { HappinessConfig } from 'happiness.config';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from 'paris/button';
+import { Checkbox } from 'paris/checkbox';
+import { Drawer } from 'paris/drawer';
+import { Input } from 'paris/input';
+import { usePagination } from 'paris/pagination';
+import { Text } from 'paris/text';
+import { TextArea } from 'paris/textarea';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from 'src/app/(frontend)/[pageID]/DonateButton.module.scss';
+import { ButtonGroup } from 'src/components/ButtonGroup';
+import { DonationAmountSelector } from 'src/components/DonationAmountSelector';
+import { formatCurrency } from 'src/util/formatCurrency';
 
 export const AmountPresets = [1000, 2500, 5000, 10000, 25000] as number[];
 
@@ -37,7 +33,8 @@ const STRIPE_APPEARANCE = {
     labels: 'above' as const,
     variables: {
         borderRadius: '0px',
-        fontFamily: "'Graphik Web', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Open Sans\", \"Helvetica Neue\", sans-serif",
+        fontFamily:
+            '\'Graphik Web\', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
         colorPrimary: '#131313',
         fontSizeBase: '14px',
         spacingUnit: '3px',
@@ -91,7 +88,8 @@ export const DonateButton = ({
     const checkoutFormRef = useRef<HTMLFormElement>(null);
 
     const total = useMemo(() => computeTotal(donation), [donation]);
-    const elementsMode = donation.frequency === 'Monthly' ? 'subscription' : 'payment';
+    const elementsMode =
+        donation.frequency === 'Monthly' ? 'subscription' : 'payment';
 
     useEffect(() => {
         if (params.get('open') === 'donate') {
@@ -117,7 +115,10 @@ export const DonateButton = ({
         router.replace(`/${pageID}?thanks=${encodeURIComponent(name)}`);
     }, [handleClose, donation.anonymous, pageID, router]);
 
-    const estFee = useMemo(() => estimateFee(donation.amount), [donation.amount]);
+    const estFee = useMemo(
+        () => estimateFee(donation.amount),
+        [donation.amount],
+    );
 
     const bottomPanel = useMemo(() => {
         if (pagination.currentPage === 'details') {
@@ -144,14 +145,18 @@ export const DonateButton = ({
                     : `Donate ${formatCurrency(total, 2)}${donation.frequency === 'One-time' ? '' : ' / month'}`}
             </Button>
         );
-    }, [pagination, donation.amount, donation.frequency, donation.email, total, paymentLoading]);
+    }, [
+        pagination,
+        donation.amount,
+        donation.frequency,
+        donation.email,
+        total,
+        paymentLoading,
+    ]);
 
     return (
         <>
-            <Button
-                onClick={() => setDrawerOpen(true)}
-                className={className}
-            >
+            <Button onClick={() => setDrawerOpen(true)} className={className}>
                 Donate
             </Button>
             <Drawer
@@ -171,7 +176,6 @@ export const DonateButton = ({
                         appearance: STRIPE_APPEARANCE,
                     }}
                 >
-                    {/* eslint-disable-next-line @typescript-eslint/no-use-before-define */}
                     <DonateDrawerInner
                         donation={donation}
                         setDonation={setDonation}
@@ -240,9 +244,10 @@ const DonateDrawerInner = ({
     }, [elements, total]);
 
     const returnUrl = useMemo(
-        () => (typeof window !== 'undefined'
-            ? `${window.location.origin}/v1/donations/checkout/success`
-            : ''),
+        () =>
+            typeof window !== 'undefined'
+                ? `${window.location.origin}/v1/donations/checkout/success`
+                : '',
         [],
     );
 
@@ -251,7 +256,10 @@ const DonateDrawerInner = ({
             {currentPage === 'details' && (
                 <div className="w-full flex flex-col gap-6">
                     <ButtonGroup
-                        options={FrequencyOptions.map((f) => ({ id: f, name: f }))}
+                        options={FrequencyOptions.map((f) => ({
+                            id: f,
+                            name: f,
+                        }))}
                         selected={donation.frequency}
                         onChange={({ id }) => {
                             setDonation((d) => ({
@@ -283,7 +291,9 @@ const DonateDrawerInner = ({
                                 </DonationAmountSelector>
                             ))}
                             <DonationAmountSelector
-                                selected={!AmountPresets.includes(donation.amount)}
+                                selected={
+                                    !AmountPresets.includes(donation.amount)
+                                }
                                 key="otherAmount"
                                 onClick={() => {
                                     setDonation((d) => ({
@@ -319,7 +329,10 @@ const DonateDrawerInner = ({
                                 startEnhancer="$"
                                 onChange={(e) => {
                                     const { value } = e.target;
-                                    if (/^[0-9]+(\.[0-9]{0,2}|)$/.test(value) || value === '') {
+                                    if (
+                                        /^[0-9]+(\.[0-9]{0,2}|)$/.test(value) ||
+                                        value === ''
+                                    ) {
                                         setOtherAmountInput(value);
                                         setDonation((d) => ({
                                             ...d,
@@ -331,20 +344,17 @@ const DonateDrawerInner = ({
                         </div>
                     </div>
                     <TextArea
-                        label={(
+                        label={
                             <div>
                                 <Text
                                     kind="paragraphSmall"
                                     style={{ fontWeight: 500 }}
                                 >
                                     Message
-                                </Text>
-                                {' '}
-                                <Text kind="paragraphSmall">
-                                    (optional)
-                                </Text>
+                                </Text>{' '}
+                                <Text kind="paragraphSmall">(optional)</Text>
                             </div>
-                        )}
+                        }
                         placeholder="Keep up the good work!"
                         value={donation.message}
                         style={{ minHeight: '80px' }}
@@ -367,12 +377,7 @@ const DonateDrawerInner = ({
                             }}
                         >
                             <Text kind="paragraphXSmall">
-                                Add
-                                {' '}
-                                <strong>
-                                    {formatCurrency(estFee, 2)}
-                                </strong>
-                                {' '}
+                                Add <strong>{formatCurrency(estFee, 2)}</strong>{' '}
                                 to cover processing fees
                             </Text>
                         </Checkbox>
@@ -403,9 +408,7 @@ const DonateDrawerInner = ({
                             }}
                         >
                             <Text kind="paragraphXSmall">
-                                Add a tip for
-                                {' '}
-                                {HappinessConfig.name}
+                                Add a tip for {HappinessConfig.name}
                             </Text>
                         </Checkbox>
                         {donation.tipPercent !== 0 ? (
@@ -418,7 +421,9 @@ const DonateDrawerInner = ({
                                         <DonationAmountSelector
                                             key={`tip-${pct}`}
                                             size="small"
-                                            selected={donation.tipPercent === pct}
+                                            selected={
+                                                donation.tipPercent === pct
+                                            }
                                             onClick={() => {
                                                 setDonation((d) => ({
                                                     ...d,
@@ -430,8 +435,7 @@ const DonateDrawerInner = ({
                                                 kind="paragraphXSmall"
                                                 style={{ fontWeight: 500 }}
                                             >
-                                                {pct * 100}
-                                                %
+                                                {pct * 100}%
                                             </Text>
                                         </DonationAmountSelector>
                                     ))}
@@ -450,7 +454,9 @@ const DonateDrawerInner = ({
                         onSuccess={onSuccess}
                         returnUrl={returnUrl}
                         onLoadingChange={setPaymentLoading}
-                        onBillingChange={(fields) => setDonation((d) => ({ ...d, ...fields }))}
+                        onBillingChange={(fields) =>
+                            setDonation((d) => ({ ...d, ...fields }))
+                        }
                     />
                 </div>
             )}

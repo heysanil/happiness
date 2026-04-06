@@ -1,0 +1,11 @@
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx commitlint --edit {1}
+
+pre-commit:
+  commands:
+    biome-check:
+      glob: "*.{js,ts,jsx,tsx,json}"
+      run: bunx biome check --write --no-errors-on-unmatched --staged {staged_files}
+      stage_fixed: true

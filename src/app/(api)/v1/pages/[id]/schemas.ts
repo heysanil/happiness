@@ -1,14 +1,13 @@
-import type { OperationObject } from 'openapi3-ts/oas30';
-import { errorResponses } from '@docs/oas/shared/errorResponses';
 import { PageSchema } from '@docs/oas/schemas/pages';
+import { errorResponses } from '@docs/oas/shared/errorResponses';
+import type { OperationObject } from 'openapi3-ts/oas30';
 
 export const PAGES_ID_GET_SCHEMA: OperationObject = {
     operationId: 'getPage',
     summary: 'Get a page',
-    description: "Gets a specific page. For this endpoint specifically, you can also pass the page's slug in place of an ID.",
-    tags: [
-        'Pages',
-    ],
+    description:
+        "Gets a specific page. For this endpoint specifically, you can also pass the page's slug in place of an ID.",
+    tags: ['Pages'],
     parameters: [
         {
             $ref: '#/components/parameters/id',
@@ -33,9 +32,7 @@ export const PAGES_ID_PATCH_SCHEMA: OperationObject = {
     operationId: 'updatePage',
     summary: 'Update a page',
     description: 'Updates a page with the supplied body.',
-    tags: [
-        'Pages',
-    ],
+    tags: ['Pages'],
     parameters: [
         {
             $ref: '#/components/parameters/id',
@@ -51,7 +48,8 @@ export const PAGES_ID_PATCH_SCHEMA: OperationObject = {
     },
     responses: {
         200: {
-            description: 'Returns only the ID and successfully-updated fields of the [Page](/schemas/Page) object.',
+            description:
+                'Returns only the ID and successfully-updated fields of the [Page](/schemas/Page) object.',
             content: {
                 'application/json': {
                     schema: {
@@ -71,10 +69,9 @@ export const PAGES_ID_PATCH_SCHEMA: OperationObject = {
 export const PAGES_ID_DELETE_SCHEMA: OperationObject = {
     operationId: 'deletePage',
     summary: 'Delete a page',
-    description: 'Deletes a specific Page. Deleted Pages are moved to the `pages_deleted` table and can be manually restored or permanently deleted.',
-    tags: [
-        'Pages',
-    ],
+    description:
+        'Deletes a specific Page. Deleted Pages are moved to the `pages_deleted` table and can be manually restored or permanently deleted.',
+    tags: ['Pages'],
     parameters: [
         {
             $ref: '#/components/parameters/id',

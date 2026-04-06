@@ -1,21 +1,17 @@
-import { getPage } from '@db/ops/pages/getPage';
-import { Text } from 'paris/text';
-import { ThanksDialog } from '@frontend/[pageID]/ThanksDialog';
 import { listDonations } from '@db/ops/donations/listDonations';
-import { desc } from 'drizzle-orm';
+import { getPage } from '@db/ops/pages/getPage';
 import type { Donation, Donor, Page } from '@db/schema';
 import { donations } from '@db/schema';
+import { SimplePage } from '@frontend/[pageID]/SimplePage';
+import { StoryPage } from '@frontend/[pageID]/StoryPage';
+import { ThanksDialog } from '@frontend/[pageID]/ThanksDialog';
+import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { HappinessConfig } from 'happiness.config';
-import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
-import { clsx } from 'clsx';
+import { desc } from 'drizzle-orm';
 import type { Metadata, ResolvingMetadata } from 'next';
-import { StoryPage } from '@frontend/[pageID]/StoryPage';
-import { SimplePage } from '@frontend/[pageID]/SimplePage';
-import LoginIcon from '@public/login.svg';
-import { db } from '@db/init';
 import { notFound } from 'next/navigation';
+import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
 
 dayjs.extend(relativeTime);
 
@@ -23,8 +19,8 @@ export const revalidate = 60;
 
 export async function generateMetadata(
     { params }: { params: { pageID: string } },
-    parent: ResolvingMetadata,
-) : Promise<Metadata> {
+    _parent: ResolvingMetadata,
+): Promise<Metadata> {
     const { pageID } = params;
     const page = await getPage(pageID);
     return {
@@ -39,11 +35,13 @@ export async function generateMetadata(
     };
 }
 
-export default async function DonationPage(
-    { params }: { params: { pageID: string } },
-) {
+export default async function DonationPage({
+    params,
+}: {
+    params: { pageID: string };
+}) {
     const page = await getPage(params.pageID);
-    const recentDonations = await listDonations({
+    const recentDonations = (await listDonations({
         include: {
             donor: true,
         },
@@ -52,7 +50,7 @@ export default async function DonationPage(
         },
         limit: 30,
         sort: [desc(donations.createdAt)],
-    }) as Array<Donation & { donor: Donor }>;
+    })) as Array<Donation & { donor: Donor }>;
 
     if (page.status === 'draft') {
         return notFound();

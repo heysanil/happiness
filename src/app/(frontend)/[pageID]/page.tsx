@@ -1,21 +1,20 @@
-import { getPage } from '@db/ops/pages/getPage';
-import { Text } from 'paris/text';
-import { ThanksDialog } from '@frontend/[pageID]/ThanksDialog';
 import { listDonations } from '@db/ops/donations/listDonations';
-import { desc } from 'drizzle-orm';
+import { getPage } from '@db/ops/pages/getPage';
 import type { Donation, Donor, Page } from '@db/schema';
 import { donations } from '@db/schema';
+import { SimplePage } from '@frontend/[pageID]/SimplePage';
+import { StoryPage } from '@frontend/[pageID]/StoryPage';
+import { ThanksDialog } from '@frontend/[pageID]/ThanksDialog';
+import LoginIcon from '@public/login.svg';
+import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { desc } from 'drizzle-orm';
 import { HappinessConfig } from 'happiness.config';
-import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
-import { clsx } from 'clsx';
 import type { Metadata, ResolvingMetadata } from 'next';
-import { StoryPage } from '@frontend/[pageID]/StoryPage';
-import { SimplePage } from '@frontend/[pageID]/SimplePage';
-import LoginIcon from '@public/login.svg';
-import { db } from '@db/init';
 import { notFound } from 'next/navigation';
+import { Text } from 'paris/text';
+import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
 
 dayjs.extend(relativeTime);
 
@@ -23,8 +22,8 @@ export const revalidate = 60;
 
 export async function generateMetadata(
     { params }: { params: { pageID: string } },
-    parent: ResolvingMetadata,
-) : Promise<Metadata> {
+    _parent: ResolvingMetadata,
+): Promise<Metadata> {
     const { pageID } = params;
     const page = await getPage(pageID);
     return {
@@ -39,11 +38,13 @@ export async function generateMetadata(
     };
 }
 
-export default async function DonationPage(
-    { params }: { params: { pageID: string } },
-) {
+export default async function DonationPage({
+    params,
+}: {
+    params: { pageID: string };
+}) {
     const page = await getPage(params.pageID);
-    const rawDonations = await listDonations({
+    const rawDonations = (await listDonations({
         include: {
             donor: true,
         },
@@ -52,15 +53,23 @@ export default async function DonationPage(
         },
         limit: 30,
         sort: [desc(donations.createdAt)],
-    }) as Array<Donation & { donor: Donor }>;
+    })) as Array<Donation & { donor: Donor }>;
 
     // Strip donor PII for anonymous donations so it never reaches the client
     const anonymousDonor: Donor = {
-        id: '', firstName: 'Anonymous', lastName: 'Donor', email: '', anonymous: true, phone: null, company: null, createdAt: new Date(), updatedAt: new Date(),
+        id: '',
+        firstName: 'Anonymous',
+        lastName: 'Donor',
+        email: '',
+        anonymous: true,
+        phone: null,
+        company: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
     };
-    const recentDonations = rawDonations.map((d) => (
-        d.visible ? d : { ...d, donor: anonymousDonor }
-    ));
+    const recentDonations = rawDonations.map((d) =>
+        d.visible ? d : { ...d, donor: anonymousDonor },
+    );
 
     if (page.status === 'draft') {
         return notFound();
@@ -88,10 +97,18 @@ export default async function DonationPage(
                         'py-[16px] md:py-[24px] w-full flex flex-row justify-between items-center',
                     )}
                 >
-                    <a className="cursor-pointer" href="https://slingshot.fm/?utm_source=happiness" target="_blank" rel="noreferrer">
+                    <a
+                        className="cursor-pointer"
+                        href="https://slingshot.fm/?utm_source=happiness"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
                         <div className="flex flex-row justify-start items-center gap-3">
                             <img
-                                src={HappinessConfig.logoWide || HappinessConfig.logo}
+                                src={
+                                    HappinessConfig.logoWide ||
+                                    HappinessConfig.logo
+                                }
                                 alt={HappinessConfig.name}
                                 className="h-[24px]"
                             />
@@ -101,11 +118,17 @@ export default async function DonationPage(
                         href="/v1/portal"
                         target="_blank"
                         className="cursor-pointer"
+                        rel="noopener"
                     >
                         <LoginIcon width="20px" />
                     </a>
                 </nav>
-                <div className={clsx(layoutStyles.headerSeparator, 'w-full h-[1px] absolute bottom-0 left-0')} />
+                <div
+                    className={clsx(
+                        layoutStyles.headerSeparator,
+                        'w-full h-[1px] absolute bottom-0 left-0',
+                    )}
+                />
             </div>
             <main className="flex-1">
                 <div
@@ -116,7 +139,10 @@ export default async function DonationPage(
                     )}
                 >
                     {page.kind === 'story' && (
-                        <StoryPage page={page} recentDonations={recentDonations} />
+                        <StoryPage
+                            page={page}
+                            recentDonations={recentDonations}
+                        />
                     )}
                     {page.kind === 'simple' && (
                         <SimplePage
@@ -134,7 +160,12 @@ export default async function DonationPage(
                     'pt-8 pb-16 mt-16 relative',
                 )}
             >
-                <div className={clsx(layoutStyles.footerSeparator, 'w-full h-1 absolute top-0 left-0')} />
+                <div
+                    className={clsx(
+                        layoutStyles.footerSeparator,
+                        'w-full h-1 absolute top-0 left-0',
+                    )}
+                />
                 <div
                     className={clsx(
                         layoutStyles.container,
@@ -143,16 +174,20 @@ export default async function DonationPage(
                     )}
                 >
                     <Text as="p" kind="paragraphSmall">
-                        ©
-                        {' '}
-                        {new Date().getFullYear()}
-                        {' '}
-                        {HappinessConfig.name}
-                        . All rights reserved.
+                        © {new Date().getFullYear()} {HappinessConfig.name}. All
+                        rights reserved.
                     </Text>
                     {!HappinessConfig.hidePoweredByHappiness && (
-                        <a href="https://github.com/heysanil/happiness" target="_blank" rel="noreferrer">
-                            <Text as="p" kind="paragraphSmall" className="underline underline-offset-4">
+                        <a
+                            href="https://github.com/heysanil/happiness"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            <Text
+                                as="p"
+                                kind="paragraphSmall"
+                                className="underline underline-offset-4"
+                            >
                                 Powered by Happiness
                             </Text>
                         </a>

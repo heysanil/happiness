@@ -1,5 +1,5 @@
-import { oas } from '@docs/oas';
 import { APIDocs } from '@docs/APIDocs';
+import { oas } from '@docs/oas';
 
 const DocsPage = async () => (
     <section className="w-full h-screen">

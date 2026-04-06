@@ -4,20 +4,23 @@ import { NextResponse } from 'next/server';
 const alwaysBypass = {
     equals: [],
     startsWith: [],
-    endsWith: [
-        'openapi.json',
-        'openapi.yaml',
-    ],
+    endsWith: ['openapi.json', 'openapi.yaml'],
     contains: [],
 };
 
 export const middleware: NextMiddleware = async (req) => {
     // Bypass the middleware for the following paths
     if (
-        alwaysBypass.equals.some((path) => req.nextUrl.pathname === path)
-        || alwaysBypass.startsWith.some((path) => req.nextUrl.pathname.startsWith(path))
-        || alwaysBypass.endsWith.some((path) => req.nextUrl.pathname.endsWith(path))
-        || alwaysBypass.contains.some((path) => req.nextUrl.pathname.includes(path))
+        alwaysBypass.equals.some((path) => req.nextUrl.pathname === path) ||
+        alwaysBypass.startsWith.some((path) =>
+            req.nextUrl.pathname.startsWith(path),
+        ) ||
+        alwaysBypass.endsWith.some((path) =>
+            req.nextUrl.pathname.endsWith(path),
+        ) ||
+        alwaysBypass.contains.some((path) =>
+            req.nextUrl.pathname.includes(path),
+        )
     ) {
         return NextResponse.next();
     }

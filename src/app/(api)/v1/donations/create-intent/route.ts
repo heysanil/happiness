@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { handleErrors } from '@v1/responses/handleErrors';
 import { stripe } from '@lib/stripe';
 import { DonationConfigSchema } from '@v1/donations/checkout/DonationConfig';
+import { handleErrors } from '@v1/responses/handleErrors';
 import { HappinessConfig } from 'happiness.config';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { generateID, Prefixes } from 'src/util/generateID';
 import { HappinessError } from 'src/util/HappinessError';
 
@@ -26,7 +26,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             donationID,
             email: validated.email,
             donorName: validated.donorName || '',
-            ...validated.message ? { message: validated.message } : {},
+            ...(validated.message ? { message: validated.message } : {}),
         };
 
         const description = `Donation to ${validated.projectName}`;
@@ -43,7 +43,10 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             });
 
             if (!paymentIntent.client_secret) {
-                throw new HappinessError('Failed to create payment intent', 500);
+                throw new HappinessError(
+                    'Failed to create payment intent',
+                    500,
+                );
             }
 
             return NextResponse.json({
@@ -54,10 +57,17 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
         // Recurring donation: create Products, Customer, and Subscription
         // Subscription price_data requires product IDs (not inline product_data)
-        const donationProduct = await stripe.products.create({ name: 'Donation', description });
-        const tipProduct = tipAmount > 0
-            ? await stripe.products.create({ name: 'Tip', description: `Supporting ${HappinessConfig.name}` })
-            : null;
+        const donationProduct = await stripe.products.create({
+            name: 'Donation',
+            description,
+        });
+        const tipProduct =
+            tipAmount > 0
+                ? await stripe.products.create({
+                      name: 'Tip',
+                      description: `Supporting ${HappinessConfig.name}`,
+                  })
+                : null;
 
         const customer = await stripe.customers.create({
             email: validated.email,
@@ -76,14 +86,18 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         recurring: { interval: 'month' },
                     },
                 },
-                ...(tipAmount > 0 && tipProduct ? [{
-                    price_data: {
-                        unit_amount: tipAmount,
-                        currency: 'usd',
-                        product: tipProduct.id,
-                        recurring: { interval: 'month' as const },
-                    },
-                }] : []),
+                ...(tipAmount > 0 && tipProduct
+                    ? [
+                          {
+                              price_data: {
+                                  unit_amount: tipAmount,
+                                  currency: 'usd',
+                                  product: tipProduct.id,
+                                  recurring: { interval: 'month' as const },
+                              },
+                          },
+                      ]
+                    : []),
             ],
             payment_behavior: 'default_incomplete',
             payment_settings: {
@@ -95,11 +109,17 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
         const invoice = subscription.latest_invoice;
         if (!invoice || typeof invoice === 'string') {
-            throw new HappinessError('Failed to create subscription invoice', 500);
+            throw new HappinessError(
+                'Failed to create subscription invoice',
+                500,
+            );
         }
         const pi = invoice.payment_intent;
         if (!pi || typeof pi === 'string' || !pi.client_secret) {
-            throw new HappinessError('Failed to create subscription payment intent', 500);
+            throw new HappinessError(
+                'Failed to create subscription payment intent',
+                500,
+            );
         }
 
         return NextResponse.json({

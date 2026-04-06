@@ -1,10 +1,8 @@
-import {
-    updatePageSchema, pages, selectPageSchema,
-} from '@db/schema';
-import type { z } from 'zod';
 import { db } from '@db/init';
-import { eq } from 'drizzle-orm';
 import { validateID, validateReturn } from '@db/ops/shared';
+import { pages, selectPageSchema, updatePageSchema } from '@db/schema';
+import { eq } from 'drizzle-orm';
+import type { z } from 'zod';
 
 /**
  * Updates a page by ID.
@@ -20,7 +18,8 @@ export const updatePage = async (
 
     const validated = await updatePageSchema.parseAsync(body);
 
-    await db.update(pages)
+    await db
+        .update(pages)
         .set({
             ...validated,
         })

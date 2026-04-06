@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
 import { getPortalURL } from '@lib/stripe/getPortalURL';
 import { handleErrors } from '@v1/responses/handleErrors';
+import { NextResponse } from 'next/server';
 
 export const GET = async () => {
     try {

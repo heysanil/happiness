@@ -1,12 +1,12 @@
-import { z } from 'zod';
 import { HappinessConfig } from 'happiness.config';
+import { z } from 'zod';
 
 export const FrequencyOptions = ['One-time', 'Monthly'] as const;
 export type DonationConfig = {
     /** The amount to donate, in cents. This should never include estimated fees. */
     amount: number;
     /** The frequency of the donation. */
-    frequency: typeof FrequencyOptions[number];
+    frequency: (typeof FrequencyOptions)[number];
     /** The ID of the page to donate to. */
     message: string;
     /** The ID of the donor. */
@@ -40,6 +40,5 @@ export const DonationConfigSchema = z.object({
 
 const estFeePercent = 0.029 + HappinessConfig.platformFee;
 const estFeeFlat = 30;
-export const estimateFee = (amount: number) => (
-    Math.round((amount + estFeeFlat) / (1 - estFeePercent)) - amount
-);
+export const estimateFee = (amount: number) =>
+    Math.round((amount + estFeeFlat) / (1 - estFeePercent)) - amount;

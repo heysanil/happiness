@@ -41,7 +41,4 @@ export const afterFilter: ParameterObject = {
     },
 };
 
-export const timestampFilters: ParameterObject[] = [
-    beforeFilter,
-    afterFilter,
-];
+export const timestampFilters: ParameterObject[] = [beforeFilter, afterFilter];

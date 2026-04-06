@@ -8,7 +8,9 @@
         "dev:db": "concurrently --kill-others 'bun dev' 'bun db:gui' -n 'next,db-gui' -c 'bgCyan,bgMagenta'",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint",
+        "lint": "biome check .",
+        "lint:fix": "biome check --write .",
+        "format": "biome format --write .",
         "db:push": "drizzle-kit push:mysql --config ./drizzle.config.ts",
         "db:gui": "drizzle-kit studio --port 3100"
     },
@@ -23,7 +25,6 @@
         "@fortawesome/react-fontawesome": "^0.2.0",
         "@planetscale/database": "^1.11.0",
         "@ssh/csstypes": "^1.1.0",
-        "@ssh/eslint-config": "^1.0.0",
         "@stoplight/elements": "^7.10.0",
         "@stripe/react-stripe-js": "^5.6.1",
         "@stripe/stripe-js": "^8.11.0",
@@ -44,10 +45,6 @@
         "drizzle-orm": "^0.28.5",
         "drizzle-zod": "^0.5.1",
         "email-validator": "^2.0.4",
-        "eslint": "8.48.0",
-        "eslint-config-next": "13.5.11",
-        "eslint-plugin-absolute-imports": "^0.0.3",
-        "husky": "^8.0.3",
         "mysql2": "^3.6.0",
         "nanoid": "^4.0.2",
         "next": "13.5.11",
@@ -69,5 +66,9 @@
     },
     "overrides": {
         "@headlessui/react": "1.7.15"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.4.10",
+        "lefthook": "^2.1.4"
     }
 }

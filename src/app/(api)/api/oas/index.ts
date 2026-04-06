@@ -1,23 +1,29 @@
-import { OpenApiBuilder } from 'openapi3-ts/oas30';
-import { PageSchema } from '@docs/oas/schemas/pages';
-import { HappinessConfig } from 'happiness.config';
-import { PAGES_ID_DELETE_SCHEMA, PAGES_ID_GET_SCHEMA, PAGES_ID_PATCH_SCHEMA } from '@v1/pages/[id]/schemas';
-import { PAGES_GET_SCHEMA, PAGES_POST_SCHEMA } from '@v1/pages/schemas';
-import { DonorSchema } from '@docs/oas/schemas/donors';
-import { ErrorResponses, ErrorSchema } from '@docs/oas/shared/errorResponses';
-import { IDParameter } from '@docs/oas/schemas/id';
-import { bearerAuth } from '@docs/oas/schemas/security';
-import { DONORS_GET_SCHEMA, DONORS_POST_SCHEMA } from '@v1/donors/schemas';
 import { DonationSchema } from '@docs/oas/schemas/donations';
-import { DONORS_SEARCH_GET_SCHEMA } from '@v1/donors/[search]/schemas';
-import { DONATIONS_GET_SCHEMA, DONATIONS_POST_SCHEMA } from '@v1/donations/schemas';
+import { DonorSchema } from '@docs/oas/schemas/donors';
+import { IDParameter } from '@docs/oas/schemas/id';
+import { PageSchema } from '@docs/oas/schemas/pages';
+import { bearerAuth } from '@docs/oas/schemas/security';
+import { ErrorResponses, ErrorSchema } from '@docs/oas/shared/errorResponses';
 import { DONATIONS_ID_GET_SCHEMA } from '@v1/donations/[id]/schemas';
+import {
+    DONATIONS_GET_SCHEMA,
+    DONATIONS_POST_SCHEMA,
+} from '@v1/donations/schemas';
+import { DONORS_SEARCH_GET_SCHEMA } from '@v1/donors/[search]/schemas';
+import { DONORS_GET_SCHEMA, DONORS_POST_SCHEMA } from '@v1/donors/schemas';
+import {
+    PAGES_ID_DELETE_SCHEMA,
+    PAGES_ID_GET_SCHEMA,
+    PAGES_ID_PATCH_SCHEMA,
+} from '@v1/pages/[id]/schemas';
+import { PAGES_GET_SCHEMA, PAGES_POST_SCHEMA } from '@v1/pages/schemas';
+import { HappinessConfig } from 'happiness.config';
+import { OpenApiBuilder } from 'openapi3-ts/oas30';
 
 export const oas = new OpenApiBuilder({
     openapi: '3.0.3',
     info: {
         title: `${HappinessConfig.name} API`,
-        // eslint-disable-next-line global-require
         version: require('../../../../../package.json')?.version || '1.0.0',
         description: `${HappinessConfig.name} is a donation page platform powered by [Happiness](https://github.com/heysanil/happiness).`,
         'x-logo': {

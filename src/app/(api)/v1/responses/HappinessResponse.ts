@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 
 /**
@@ -29,7 +28,7 @@ export class HappinessResponse {
 
     /** Returns a JSON {@link NextResponse} with the given parameters */
     static json(status: number, body: Record<string, any>) {
-        return new NextResponse(this.stringify(body), {
+        return new NextResponse(HappinessResponse.stringify(body), {
             status,
             headers: {
                 'Content-Type': 'application/json',

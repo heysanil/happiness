@@ -1,5 +1,5 @@
-import type { FC } from 'react';
 import { clsx } from 'clsx';
+import type { FC } from 'react';
 import styles from 'src/app/(frontend)/[pageID]/Banner.module.scss';
 
 export type BannerProps = {
@@ -8,11 +8,7 @@ export type BannerProps = {
     alt: string;
 };
 
-export const Banner: FC<BannerProps> = ({
-    kind,
-    url,
-    alt,
-}) => (
+export const Banner: FC<BannerProps> = ({ kind, url, alt }) => (
     <>
         {kind === 'image' && (
             <div
@@ -33,11 +29,7 @@ export const Banner: FC<BannerProps> = ({
             </div>
         )}
         {kind === 'embed' && (
-            <iframe
-                title={alt}
-                src={url}
-                className="w-full aspect-video"
-            />
+            <iframe title={alt} src={url} className="w-full aspect-video" />
         )}
     </>
 );

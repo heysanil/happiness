@@ -1,10 +1,8 @@
-import {
-    insertPageSchema, pages, selectPageSchema,
-} from '@db/schema';
-import type { z } from 'zod';
 import { db } from '@db/init';
 import { validateReturn } from '@db/ops/shared';
+import { insertPageSchema, pages, selectPageSchema } from '@db/schema';
 import { generateID, Prefixes } from 'src/util/generateID';
+import type { z } from 'zod';
 
 /**
  * Creates a new page.
@@ -19,7 +17,7 @@ export const createPage = async (
 
     const validated = await insertPageSchema.parseAsync(body);
 
-    const query = await db.insert(pages).values({
+    const _query = await db.insert(pages).values({
         ...validated,
         id,
         createdAt,

@@ -14,19 +14,23 @@ export const ErrorSchema: SchemaObject = {
             description: 'A human-readable message describing the error.',
             example: 'Unauthorized',
         },
-        ...(process.env.NODE_ENV !== 'production' ? {
-            debug: {
-                type: 'object',
-                description: 'In non-production environments, additional debugging information may be provided as an object.',
-            },
-        } : {}),
+        ...(process.env.NODE_ENV !== 'production'
+            ? {
+                  debug: {
+                      type: 'object',
+                      description:
+                          'In non-production environments, additional debugging information may be provided as an object.',
+                  },
+              }
+            : {}),
     },
     required: ['status', 'message'],
 };
 
 export const ErrorResponses: ResponsesObject = {
     Error400: {
-        description: 'Bad request; returned when the request is malformed or invalid.',
+        description:
+            'Bad request; returned when the request is malformed or invalid.',
         content: {
             'application/json': {
                 schema: {
@@ -36,7 +40,8 @@ export const ErrorResponses: ResponsesObject = {
         },
     },
     Error401: {
-        description: 'Unauthorized; returned when the request is not authenticated.',
+        description:
+            'Unauthorized; returned when the request is not authenticated.',
         content: {
             'application/json': {
                 schema: {
@@ -46,7 +51,8 @@ export const ErrorResponses: ResponsesObject = {
         },
     },
     Error403: {
-        description: 'Forbidden; returned when the request is authenticated but the user does not have permission to perform the requested action.',
+        description:
+            'Forbidden; returned when the request is authenticated but the user does not have permission to perform the requested action.',
         content: {
             'application/json': {
                 schema: {
@@ -56,7 +62,8 @@ export const ErrorResponses: ResponsesObject = {
         },
     },
     Error500: {
-        description: 'Internal server error; returned when an unexpected error occurs on the server.',
+        description:
+            'Internal server error; returned when an unexpected error occurs on the server.',
         content: {
             'application/json': {
                 schema: {
@@ -87,7 +94,9 @@ type ErrorCode = keyof typeof allErrors;
 export const errorResponses = (filter?: ErrorCode[]) => {
     if (filter) {
         return Object.fromEntries(
-            Object.entries(allErrors).filter(([key]) => filter.includes(key as unknown as ErrorCode)),
+            Object.entries(allErrors).filter(([key]) =>
+                filter.includes(key as unknown as ErrorCode),
+            ),
         );
     }
     return allErrors;

@@ -1,18 +1,13 @@
-import type { FC } from 'react';
-import { pvar } from 'paris/theme';
 import Verified from '@public/verified.svg';
+import { pvar } from 'paris/theme';
+import type { FC } from 'react';
 
 export const Avatar: FC<{
     src: string;
     alt: string;
     width?: number;
     verified?: boolean;
-}> = ({
-    src,
-    alt,
-    width = 32,
-    verified = false,
-}) => (
+}> = ({ src, alt, width = 32, verified = false }) => (
     <div
         className="relative shrink-0 bg-black rounded-full flex justify-center items-center"
         style={{

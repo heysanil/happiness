@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * @class HappinessError
  * A generic error class that also adds an HTTP status code

@@ -1,14 +1,13 @@
-import type { OperationObject } from 'openapi3-ts/oas30';
-import { errorResponses } from '@docs/oas/shared/errorResponses';
 import { PageSchema } from '@docs/oas/schemas/pages';
+import { errorResponses } from '@docs/oas/shared/errorResponses';
+import type { OperationObject } from 'openapi3-ts/oas30';
 
 export const PAGES_GET_SCHEMA: OperationObject = {
     operationId: 'listPages',
     summary: 'List pages',
-    description: 'Retrieves a list of all pages, optionally filtered by query parameters.',
-    tags: [
-        'Pages',
-    ],
+    description:
+        'Retrieves a list of all pages, optionally filtered by query parameters.',
+    tags: ['Pages'],
     responses: {
         200: {
             description: 'Returns an array of [Page](/schemas/Page) objects.',
@@ -31,9 +30,7 @@ export const PAGES_POST_SCHEMA: OperationObject = {
     operationId: 'createPage',
     summary: 'Create a page',
     description: 'Creates a page with the supplied body.',
-    tags: [
-        'Pages',
-    ],
+    tags: ['Pages'],
     requestBody: {
         description: 'Fields for creating a new Page.',
         content: {

@@ -1,7 +1,7 @@
-import { pages, pagesDeleted } from '@db/schema';
-import { eq } from 'drizzle-orm';
 import { db } from '@db/init';
 import { validateID } from '@db/ops/shared';
+import { pages, pagesDeleted } from '@db/schema';
+import { eq } from 'drizzle-orm';
 import { HappinessError } from 'src/util/HappinessError';
 
 /**
@@ -11,9 +11,7 @@ import { HappinessError } from 'src/util/HappinessError';
  *
  * @param id - The ID of the page to delete.
  */
-export const deletePage = async (
-    id: string,
-): Promise<void> => {
+export const deletePage = async (id: string): Promise<void> => {
     await validateID('Page', id);
 
     // Get the page to be deleted
@@ -23,7 +21,9 @@ export const deletePage = async (
 
     // If the page doesn't exist, return a 404
     if (!page) {
-        throw new HappinessError('No such page found', 404, { queryReturn: page });
+        throw new HappinessError('No such page found', 404, {
+            queryReturn: page,
+        });
     }
 
     // Create a new record in the deleted table, and delete the original

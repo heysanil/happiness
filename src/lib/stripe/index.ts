@@ -1,6 +1,9 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY || typeof process.env.STRIPE_SECRET_KEY !== 'string') {
+if (
+    !process.env.STRIPE_SECRET_KEY ||
+    typeof process.env.STRIPE_SECRET_KEY !== 'string'
+) {
     throw new Error('Missing Stripe secret key');
 }
 

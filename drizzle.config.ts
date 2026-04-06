@@ -1,5 +1,5 @@
-import type { Config } from 'drizzle-kit';
 import { configDotenv } from 'dotenv';
+import type { Config } from 'drizzle-kit';
 import { HappinessConfig } from 'happiness.config';
 
 configDotenv({

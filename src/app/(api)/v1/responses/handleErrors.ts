@@ -1,16 +1,18 @@
+import { DatabaseError } from '@planetscale/database';
+import { ErrorResponse } from '@v1/responses/ErrorResponse';
 import type { NextResponse } from 'next/server';
+import { DebugMode } from 'src/constants';
+import { HappinessError } from 'src/util/HappinessError';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-import { DatabaseError } from '@planetscale/database';
-import { HappinessError } from 'src/util/HappinessError';
-import { DebugMode } from 'src/constants';
-import { ErrorResponse } from '@v1/responses/ErrorResponse';
 
 /**
  * Handle errors and return a {@link NextResponse} to be sent to the client
  * @param e - The error to handle
  */
-export const handleErrors = <T extends Error = Error>(e: unknown | T): NextResponse => {
+export const handleErrors = <T extends Error = Error>(
+    e: unknown | T,
+): NextResponse => {
     // Log the error
     console.error(e);
 
@@ -34,29 +36,37 @@ export const handleErrors = <T extends Error = Error>(e: unknown | T): NextRespo
 
     // Check if the error is a PlanetScale database error
     if (e instanceof DatabaseError) {
-        return new ErrorResponse(
-            e.status,
-            'Database returned an error',
-            { dbError: e },
-        ).json;
+        return new ErrorResponse(e.status, 'Database returned an error', {
+            dbError: e,
+        }).json;
     }
 
     // Check if the error is a {@link Error} where we can return a generic error response
     if (e instanceof Error) {
         // Check if the error is a JWT error
         if (e.name === 'JWTExpired') {
-            return ErrorResponse.unauthorized('Unauthorized; token expired', { joseError: e }).json;
+            return ErrorResponse.unauthorized('Unauthorized; token expired', {
+                joseError: e,
+            }).json;
         }
         if (e.name === 'JWTInvalid') {
-            return ErrorResponse.unauthorized(`Unauthorized; ${e?.message}`, { joseError: e }).json;
+            return ErrorResponse.unauthorized(`Unauthorized; ${e?.message}`, {
+                joseError: e,
+            }).json;
         }
         if (e.name === 'JWTClaimValidationFailed') {
-            return ErrorResponse.unauthorized(`Unauthorized; ${e?.message}`, { joseError: e }).json;
+            return ErrorResponse.unauthorized(`Unauthorized; ${e?.message}`, {
+                joseError: e,
+            }).json;
         }
 
-        return ErrorResponse.internalServerError(`${e.name}: ${e.message}`, { genericError: e }).json;
+        return ErrorResponse.internalServerError(`${e.name}: ${e.message}`, {
+            genericError: e,
+        }).json;
     }
 
     // Fallback to a generic internal server error
-    return ErrorResponse.internalServerError('Internal server error', { otherError: e }).json;
+    return ErrorResponse.internalServerError('Internal server error', {
+        otherError: e,
+    }).json;
 };

@@ -1,11 +1,9 @@
-import {
-    insertDonorSchema, donors, selectDonorSchema,
-} from '@db/schema';
-import type { z } from 'zod';
 import { db } from '@db/init';
 import { validateReturn } from '@db/ops/shared';
+import { donors, insertDonorSchema, selectDonorSchema } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { HappinessError } from 'src/util/HappinessError';
+import type { z } from 'zod';
 
 /**
  * Creates a new donor, or updates an existing donor if the email or id provided already exists.
@@ -34,7 +32,10 @@ export const upsertDonor = async (
     });
 
     if (!query) {
-        throw new HappinessError('Failed to create donor', 500, { body, query });
+        throw new HappinessError('Failed to create donor', 500, {
+            body,
+            query,
+        });
     }
 
     return validateReturn(selectDonorSchema, query);

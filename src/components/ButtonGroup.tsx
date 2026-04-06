@@ -1,13 +1,12 @@
 'use client';
 
-import type { FC } from 'react';
-import { Text } from 'paris/text';
-import { useMemo } from 'react';
-
 import clsx from 'clsx';
+import { Text } from 'paris/text';
+import type { FC } from 'react';
+import { useMemo } from 'react';
 import styles from 'src/components/ButtonGroup.module.scss';
 
-export type ButtonGroupOption = { id: string, name: string };
+export type ButtonGroupOption = { id: string; name: string };
 
 export type ButtonGroupProps = {
     /** The options to display in the ButtonGroup. */
@@ -23,9 +22,10 @@ export const ButtonGroup: FC<ButtonGroupProps> = ({
     selected,
     onChange,
 }) => {
-    const selectedIndex = useMemo(() => (
-        options.findIndex((option) => option.id === selected)
-    ), [options, selected]);
+    const selectedIndex = useMemo(
+        () => options.findIndex((option) => option.id === selected),
+        [options, selected],
+    );
 
     return (
         <div
@@ -42,7 +42,7 @@ export const ButtonGroup: FC<ButtonGroupProps> = ({
                     boxShadow: 'var(--pte-lighting-subtlePopup)',
                 }}
             />
-            {options.map((option, index) => (
+            {options.map((option, _index) => (
                 <button
                     key={option.id}
                     type="button"

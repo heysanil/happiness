@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
 import { getPage } from '@db/ops/pages/getPage';
 import { handleErrors } from '@v1/responses/handleErrors';
+import { NextResponse } from 'next/server';
 
 export const GET = async (
     request: Request,
@@ -32,13 +32,19 @@ export const GET = async (
                 headers,
                 status: 200,
             });
-        } if (page.bannerType === 'embed' && page.bannerURL?.includes('youtube.com/embed')) {
+        }
+        if (
+            page.bannerType === 'embed' &&
+            page.bannerURL?.includes('youtube.com/embed')
+        ) {
             // Parse the URL
             const url = new URL(page.bannerURL);
             const videoId = url.pathname.split('?')[0].split('/').pop();
 
             // Download the video thumbnail
-            const response = await fetch(`https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`);
+            const response = await fetch(
+                `https://i3.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+            );
             if (!response.ok) {
                 return new NextResponse(null, { status: 404 });
             }

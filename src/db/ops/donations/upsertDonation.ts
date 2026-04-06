@@ -1,12 +1,17 @@
-import {
-    insertDonationSchema, donations, selectDonationSchema, insertDonorSchema, donors, pages,
-} from '@db/schema';
-import type { z } from 'zod';
 import { db } from '@db/init';
 import { validateReturn } from '@db/ops/shared';
-import { generateID, Prefixes } from 'src/util/generateID';
+import {
+    donations,
+    donors,
+    insertDonationSchema,
+    insertDonorSchema,
+    pages,
+    selectDonationSchema,
+} from '@db/schema';
 import { eq } from 'drizzle-orm';
+import { generateID, Prefixes } from 'src/util/generateID';
 import { HappinessError } from 'src/util/HappinessError';
+import type { z } from 'zod';
 
 /**
  * Creates a new donation, upserting the donor data.
@@ -22,7 +27,9 @@ export const upsertDonation = async (
 ) => {
     const createdAt = new Date();
 
-    const validated = await insertDonationSchema.omit({ donorID: true }).parseAsync(body);
+    const validated = await insertDonationSchema
+        .omit({ donorID: true })
+        .parseAsync(body);
     const validatedDonor = await insertDonorSchema.parseAsync(donor);
 
     const id = validated.id || generateID(Prefixes.Donation);
@@ -37,10 +44,14 @@ export const upsertDonation = async (
         if (!pageQuery?.id) {
             try {
                 tx.rollback();
-            } catch (e) {
+            } catch (_e) {
                 // Graceful catch so we can throw a more helpful error
             }
-            throw new HappinessError('No such page found', 404, { pageQuery, validated, validatedDonor });
+            throw new HappinessError('No such page found', 404, {
+                pageQuery,
+                validated,
+                validatedDonor,
+            });
         }
 
         // Upsert donor
@@ -65,11 +76,14 @@ export const upsertDonation = async (
         if (!donorData?.id) {
             try {
                 tx.rollback();
-            } catch (e) {
+            } catch (_e) {
                 // Graceful catch so we can throw a more helpful error
             }
             throw new HappinessError('Failed to create or update donor', 500, {
-                body, donor, donorQuery, donorData,
+                body,
+                donor,
+                donorQuery,
+                donorData,
             });
         }
 
@@ -82,10 +96,14 @@ export const upsertDonation = async (
             if (existing?.refunded) {
                 try {
                     tx.rollback();
-                } catch (e) {
+                } catch (_e) {
                     // Graceful catch so we can throw a more helpful error
                 }
-                throw new HappinessError('Donation has been refunded and cannot be updated', 409, { id: validated.id });
+                throw new HappinessError(
+                    'Donation has been refunded and cannot be updated',
+                    409,
+                    { id: validated.id },
+                );
             }
         }
 

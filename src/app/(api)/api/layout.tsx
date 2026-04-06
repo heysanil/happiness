@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
-import Script from 'next/script';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import { Fira_Code } from 'next/font/google';
+import Script from 'next/script';
+import type { ReactNode } from 'react';
 
 export const runtime = 'nodejs';
 
@@ -21,18 +21,16 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
     return (
         <>
             <style
-                // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
                     __html: customStyles,
                 }}
             />
-            <section className="w-full h-screen">
-                {children}
-            </section>
-            <Script
-                strategy="beforeInteractive"
-            >
-                {fs.readFileSync('./node_modules/@stoplight/elements/web-components.min.js', 'utf8')}
+            <section className="w-full h-screen">{children}</section>
+            <Script strategy="beforeInteractive">
+                {fs.readFileSync(
+                    './node_modules/@stoplight/elements/web-components.min.js',
+                    'utf8',
+                )}
             </Script>
         </>
     );

@@ -1,23 +1,22 @@
 'use client';
 
+import type { Page } from '@db/schema';
+import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { share } from '@frontend/[pageID]/share';
+import { Button } from 'paris/button';
+import { Dialog } from 'paris/dialog';
+import { Text } from 'paris/text';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
-import { Dialog } from 'paris/dialog';
-import type { Page } from '@db/schema';
-import { Text } from 'paris/text';
-import { Button } from 'paris/button';
-import { HappinessConfig } from 'happiness.config';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
-import { share } from '@frontend/[pageID]/share';
 
-const ShareIcon = ({ size }: { size: number }) => <FontAwesomeIcon width={size - 2} icon={faArrowUpRightFromSquare} />;
+const ShareIcon = ({ size }: { size: number }) => (
+    <FontAwesomeIcon width={size - 2} icon={faArrowUpRightFromSquare} />
+);
 
 export const ThanksDialog: FC<{
-    page: Page,
-}> = ({
-    page,
-}) => {
+    page: Page;
+}> = ({ page }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const [thanks, setThanks] = useState('' as string);
@@ -39,14 +38,12 @@ export const ThanksDialog: FC<{
             onClose={() => setIsOpen(false)}
         >
             <Text as="p" kind="paragraphMedium">
-                Your donation to
-                {' '}
-                <strong>{page.organizer}</strong>
-                {' '}
-                has been processed. You should receive an email receipt shortly.
+                Your donation to <strong>{page.organizer}</strong> has been
+                processed. You should receive an email receipt shortly.
             </Text>
             <Text as="p" kind="paragraphMedium">
-                Want to increase your impact even more? Share your donation with your friends and family to help.
+                Want to increase your impact even more? Share your donation with
+                your friends and family to help.
             </Text>
             <div className="w-full flex justify-end gap-2">
                 <Button
@@ -54,7 +51,11 @@ export const ThanksDialog: FC<{
                     onClick={() => {
                         setIsOpen(false);
                         if (typeof window !== 'undefined') {
-                            window.history.replaceState({}, '', window.location.pathname);
+                            window.history.replaceState(
+                                {},
+                                '',
+                                window.location.pathname,
+                            );
                         }
                     }}
                 >

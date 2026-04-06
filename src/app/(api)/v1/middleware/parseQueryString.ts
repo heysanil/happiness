@@ -7,20 +7,26 @@ interface ParsedParameters {
     };
 }
 
-export const parseQueryString = (queryString: string | URLSearchParams): ParsedParameters => {
+export const parseQueryString = (
+    queryString: string | URLSearchParams,
+): ParsedParameters => {
     const result: ParsedParameters = {};
 
     if (!queryString) {
         return result;
     }
 
-    const params = (queryString instanceof URLSearchParams) ? queryString : new URLSearchParams(queryString);
+    const params =
+        queryString instanceof URLSearchParams
+            ? queryString
+            : new URLSearchParams(queryString);
 
     result.select = true;
     if (params.has('select')) {
         const selectValue = params.get('select');
         if (selectValue) {
-            result.select = selectValue === 'true' ? true : selectValue.split(',');
+            result.select =
+                selectValue === 'true' ? true : selectValue.split(',');
         }
     }
 

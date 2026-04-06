@@ -13,7 +13,9 @@ bun install              # Install dependencies
 bun dev                  # Dev server (port from HP_DEV_PORT env, default 3000)
 bun dev:db               # Dev server + Drizzle Studio (port 3100) concurrently
 bun build                # Production build
-bun lint                 # ESLint
+bun lint                 # Biome lint + format check
+bun lint:fix             # Biome lint + format auto-fix
+bun format               # Biome format auto-fix
 bun db:push              # Push Drizzle schema to MySQL database
 bun db:gui               # Open Drizzle Studio on port 3100
 ```
@@ -70,7 +72,7 @@ Tailwind CSS + SCSS modules. The `paris` UI library is used for typography and t
 
 ### Versioning & Releases
 
-Uses Changesets for versioning. Conventional commits enforced via commitlint + Husky. GitHub Actions workflow creates release PRs on push to `main`.
+Uses Changesets for versioning. Conventional commits enforced via commitlint + Lefthook. Biome handles linting and formatting. GitHub Actions workflow creates release PRs on push to `main`.
 
 ### Runtime
 

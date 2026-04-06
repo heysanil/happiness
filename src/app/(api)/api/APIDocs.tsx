@@ -30,14 +30,14 @@ export const APIDocs = ({ spec }: { spec: string }) => {
         }
     }, [isClient, spec]);
 
-    return !isClient
-        ? (<div />)
-        : (
-            <elements-api
-                apiDescriptionDocument={spec}
-                router="history"
-                layout="sidebar"
-                basePath="/api"
-            />
-        );
+    return !isClient ? (
+        <div />
+    ) : (
+        <elements-api
+            apiDescriptionDocument={spec}
+            router="history"
+            layout="sidebar"
+            basePath="/api"
+        />
+    );
 };
