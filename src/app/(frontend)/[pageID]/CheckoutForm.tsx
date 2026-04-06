@@ -215,10 +215,12 @@ HTMLFormElement,
                         }}
                     />
 
-                    <PaymentElement options={{
-                        layout: 'accordion',
-                        fields: { billingDetails: { name: 'auto' } },
-                    }} />
+                    <PaymentElement
+                        options={{
+                            layout: 'accordion',
+                            fields: { billingDetails: { name: 'auto' } },
+                        }}
+                    />
 
                     {error && (
                         <Text kind="paragraphXSmall" style={{ color: 'var(--pte-colors-contentNegative, #dc2626)' }}>
