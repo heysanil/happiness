@@ -17,6 +17,7 @@ import { Checkbox } from 'paris/checkbox';
 import { Drawer } from 'paris/drawer';
 import { Input } from 'paris/input';
 import { usePagination } from 'paris/pagination';
+import { Select } from 'paris/select';
 import { Text } from 'paris/text';
 import { TextArea } from 'paris/textarea';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -301,77 +302,95 @@ const DonateDrawerInner = ({
                     />
                     <div className="flex flex-col gap-2">
                         {isTierView && parsedPresets ? (
-                            <div className="flex flex-col gap-2">
-                                {parsedPresets.map((preset) => (
-                                    <DonationAmountSelector
-                                        selected={
-                                            donation.amount === preset.amount
-                                        }
-                                        key={preset.amount}
-                                        onClick={() => {
-                                            setDonation((d) => ({
-                                                ...d,
-                                                amount: preset.amount,
-                                            }));
-                                            setShowOtherAmount(false);
-                                        }}
-                                        style={{ width: '100%' }}
-                                    >
-                                        <div className="w-full flex justify-between items-center">
-                                            <div className="flex flex-col gap-0.5">
-                                                <Text
-                                                    kind="paragraphSmall"
-                                                    style={{ fontWeight: 600 }}
-                                                >
-                                                    {preset.name}
-                                                </Text>
-                                                {preset.description && (
-                                                    <Text
-                                                        kind="paragraphXSmall"
-                                                        style={{ opacity: 0.7 }}
-                                                    >
-                                                        {preset.description}
-                                                    </Text>
-                                                )}
-                                            </div>
-                                            <Text
-                                                kind="paragraphSmall"
-                                                style={{ fontWeight: 500 }}
-                                            >
-                                                {formatCurrency(
-                                                    preset.amount,
-                                                    0,
-                                                )}
-                                            </Text>
-                                        </div>
-                                    </DonationAmountSelector>
-                                ))}
-                                <DonationAmountSelector
-                                    selected={
-                                        !amounts.includes(donation.amount)
-                                    }
-                                    key="otherAmount"
-                                    onClick={() => {
+                            <Select
+                                kind="card"
+                                label="Donation amount"
+                                hideLabel
+                                value={String(donation.amount)}
+                                onChange={(id) => {
+                                    if (id === 'other') {
                                         setDonation((d) => ({
                                             ...d,
                                             amount: 0,
                                         }));
                                         setOtherAmountInput('');
                                         setShowOtherAmount(true);
-                                    }}
-                                    style={{
-                                        width: '100%',
-                                        borderStyle: 'dashed',
-                                    }}
-                                >
-                                    <Text
-                                        kind="paragraphSmall"
-                                        style={{ fontWeight: 500 }}
-                                    >
-                                        Other
-                                    </Text>
-                                </DonationAmountSelector>
-                            </div>
+                                    } else if (id) {
+                                        setDonation((d) => ({
+                                            ...d,
+                                            amount: Number(id),
+                                        }));
+                                        setShowOtherAmount(false);
+                                    }
+                                }}
+                                options={[
+                                    ...parsedPresets.map((preset) => ({
+                                        id: String(preset.amount),
+                                        node: (
+                                            <div
+                                                className="w-full flex justify-between items-center text-left"
+                                                style={{
+                                                    padding: '8px 12px',
+                                                }}
+                                            >
+                                                <div className="flex flex-col gap-0.5">
+                                                    <Text
+                                                        kind="paragraphSmall"
+                                                        weight="semibold"
+                                                    >
+                                                        {preset.name}
+                                                    </Text>
+                                                    {preset.description && (
+                                                        <Text
+                                                            kind="paragraphXSmall"
+                                                            style={{
+                                                                opacity: 0.7,
+                                                            }}
+                                                        >
+                                                            {preset.description}
+                                                        </Text>
+                                                    )}
+                                                </div>
+                                                <Text
+                                                    kind="paragraphSmall"
+                                                    weight="medium"
+                                                >
+                                                    {formatCurrency(
+                                                        preset.amount,
+                                                        0,
+                                                    )}
+                                                </Text>
+                                            </div>
+                                        ),
+                                    })),
+                                    {
+                                        id: 'other',
+                                        node: (
+                                            <div
+                                                className="w-full flex flex-col gap-0.5 text-left"
+                                                style={{
+                                                    padding: '8px 12px',
+                                                }}
+                                            >
+                                                <Text
+                                                    kind="paragraphSmall"
+                                                    weight="semibold"
+                                                >
+                                                    Other
+                                                </Text>
+                                                <Text
+                                                    kind="paragraphXSmall"
+                                                    style={{
+                                                        opacity: 0.7,
+                                                    }}
+                                                >
+                                                    Choose your own amount.
+                                                </Text>
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                            />
                         ) : (
                             <div className="grid grid-cols-3 gap-2">
                                 {amounts.map((amount) => (

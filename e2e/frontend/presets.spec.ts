@@ -136,7 +136,7 @@ test.describe
             await expect(continueButton).not.toHaveText(initialText!);
         });
 
-        test('tier view — Other button is visible and works', async ({
+        test('tier view — Other option is visible and works', async ({
             page,
         }) => {
             await page.goto(`/${tierSlug}`);
@@ -146,7 +146,8 @@ test.describe
             const drawer = page.getByRole('dialog');
             await expect(drawer).toBeVisible({ timeout: 5_000 });
 
-            await drawer.getByRole('button', { name: 'Other' }).click();
+            // In tier view, "Other" is a card radio option, not a button
+            await drawer.getByText('Other', { exact: true }).click();
             const customInput = drawer.getByPlaceholder('Enter amount');
             await expect(customInput).toBeVisible();
         });
