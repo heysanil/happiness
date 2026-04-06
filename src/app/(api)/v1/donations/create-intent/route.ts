@@ -24,6 +24,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             visible: `${!validated.anonymous}`,
             tipAmount: `${tipAmount}`,
             donationID,
+            email: validated.email,
             ...validated.message ? { message: validated.message } : {},
         };
 
@@ -36,6 +37,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 currency: 'usd',
                 metadata,
                 description,
+                receipt_email: validated.email,
                 automatic_payment_methods: { enabled: true },
             });
 
@@ -57,6 +59,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             : null;
 
         const customer = await stripe.customers.create({
+            email: validated.email,
             metadata: { createdByHappiness: 'true' },
         });
 

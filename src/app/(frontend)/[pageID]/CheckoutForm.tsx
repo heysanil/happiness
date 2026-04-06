@@ -12,6 +12,7 @@ import {
 import type {
     StripeExpressCheckoutElementConfirmEvent,
 } from '@stripe/stripe-js';
+import { Input } from 'paris/input';
 import { Text } from 'paris/text';
 import { formatCurrency } from 'src/util/formatCurrency';
 import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
@@ -24,12 +25,14 @@ HTMLFormElement,
     onSuccess: () => void;
     returnUrl: string;
     onLoadingChange?: (loading: boolean) => void;
+    onEmailChange: (email: string) => void;
 }
 >(({
             donation,
             onSuccess,
             returnUrl,
             onLoadingChange,
+            onEmailChange,
         }, ref) => {
             const stripe = useStripe();
             const elements = useElements();
@@ -75,6 +78,12 @@ HTMLFormElement,
                     clientSecret,
                     confirmParams: {
                         return_url: returnUrl,
+                        receipt_email: donation.email,
+                        payment_method_data: {
+                            billing_details: {
+                                email: donation.email,
+                            },
+                        },
                     },
                     redirect: 'if_required',
                 });
@@ -149,6 +158,17 @@ HTMLFormElement,
                             </div>
                         </div>
                     </div>
+
+                    <Input
+                        label="Email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={donation.email}
+                        required
+                        onChange={(e) => {
+                            onEmailChange(e.target.value);
+                        }}
+                    />
 
                     <div style={{ display: expressCheckoutAvailable ? undefined : 'none' }}>
                         <ExpressCheckoutElement

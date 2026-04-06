@@ -19,6 +19,8 @@ export type DonationConfig = {
     pageID: string;
     /** Tip for the platform. */
     tipPercent: number;
+    /** Donor email for receipts. */
+    email: string;
 };
 
 export const DonationConfigSchema = z.object({
@@ -30,6 +32,7 @@ export const DonationConfigSchema = z.object({
     projectName: z.string(),
     pageID: z.string(),
     tipPercent: z.number().gte(0),
+    email: z.string().email(),
 });
 
 const estFeePercent = 0.029 + HappinessConfig.platformFee;

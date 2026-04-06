@@ -53,6 +53,7 @@ const initialDonation: DonationConfig = {
     projectName: HappinessConfig.name,
     pageID: '',
     tipPercent: 0.1,
+    email: '',
 };
 
 /** Compute the total amount in cents for a given donation config */
@@ -134,7 +135,7 @@ export const DonateButton = ({
                 onClick={() => {
                     checkoutFormRef.current?.requestSubmit();
                 }}
-                disabled={paymentLoading}
+                disabled={paymentLoading || !donation.email}
                 style={{ width: '100%' }}
             >
                 {paymentLoading
@@ -448,6 +449,7 @@ const DonateDrawerInner = ({
                         onSuccess={onSuccess}
                         returnUrl={returnUrl}
                         onLoadingChange={setPaymentLoading}
+                        onEmailChange={(email) => setDonation((d) => ({ ...d, email }))}
                     />
                 </div>
             )}

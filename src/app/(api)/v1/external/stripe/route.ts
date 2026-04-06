@@ -44,6 +44,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         message: z.string().optional(),
                         visible: z.string().optional(),
                         tipAmount: z.string().optional(),
+                        email: z.string().optional(),
                     })
                     .passthrough()
                     .spa(pi.metadata);
@@ -71,6 +72,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                     });
                 }
 
+                const donorEmail = piMeta.email
+                    || charge.billing_details?.email
+                    || customer?.email
+                    || `${piMeta.donationID}@donor.noemail`;
+
                 const piDonation = await upsertDonation(
                     {
                         id: piMeta.donationID,
@@ -88,7 +94,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                     {
                         firstName: customer?.name?.split(' ')[0] || 'Anonymous',
                         lastName: customer?.name?.split(' ')[1] || 'Donor',
-                        email: customer?.email || null,
+                        email: donorEmail,
                         phone: customer?.phone || null,
                         anonymous: piMeta.visible !== 'true',
                     },
@@ -113,6 +119,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         message: z.string().optional(),
                         visible: z.string().optional(),
                         tipAmount: z.string().optional(),
+                        email: z.string().optional(),
                     })
                     .passthrough()
                     .spa(
@@ -148,6 +155,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         });
                 }
 
+                const invoiceDonorEmail = metadata.email
+                    || customer?.email
+                    || charge.billing_details?.email
+                    || `${donationID}@donor.noemail`;
+
                 // Upsert donation
                 const donation = await upsertDonation(
                     {
@@ -166,8 +178,8 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                     {
                         firstName: customer?.name?.split(' ')[0] || 'Anonymous',
                         lastName: customer?.name?.split(' ')[1] || 'Donor',
-                        email: customer.email,
-                        phone: customer.phone || null,
+                        email: invoiceDonorEmail,
+                        phone: customer?.phone || null,
                         anonymous: metadata.visible !== 'true',
                     },
                 );
