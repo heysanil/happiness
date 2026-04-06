@@ -300,7 +300,7 @@ const DonateDrawerInner = ({
                         }}
                     />
                     <div className="flex flex-col gap-2">
-                        {isTierView ? (
+                        {isTierView && parsedPresets ? (
                             <div className="flex flex-col gap-2">
                                 {parsedPresets.map((preset) => (
                                     <DonationAmountSelector

@@ -56,7 +56,7 @@ const PagesColumns = {
     currency: mysqlEnum('goal_currency', ['usd']),
     showRelatedPages: boolean('show_related_pages').notNull().default(false),
     hideAmountRaised: boolean('hide_amount_raised').notNull().default(false),
-    presets: json().$type<PresetItem[]>(),
+    presets: json('presets').$type<PresetItem[]>(),
     status: mysqlEnum('status', ['draft', 'published', 'inactive'])
         .notNull()
         .default('published'),
@@ -139,13 +139,19 @@ export const donorsRelations = relations(donors, ({ many }) => ({
     donations: many(donations),
 }));
 
-export const insertPageSchema = createInsertSchema(pages).omit({
+export const insertPageSchema = createInsertSchema(pages, {
+    presets: presetsSchema.nullable().optional(),
+}).omit({
     id: true,
     createdAt: true,
     updatedAt: true,
 });
-export const updatePageSchema = insertPageSchema.deepPartial();
-export const selectPageSchema = createSelectSchema(pages);
+export const updatePageSchema = insertPageSchema.deepPartial().extend({
+    presets: presetsSchema.nullable().optional(),
+});
+export const selectPageSchema = createSelectSchema(pages, {
+    presets: presetsSchema.nullable(),
+});
 
 export const insertDonationSchema = createInsertSchema(donations)
     .partial({ id: true })
