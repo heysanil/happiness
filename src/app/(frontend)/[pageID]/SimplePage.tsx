@@ -4,13 +4,13 @@ import { DonateButton } from '@frontend/[pageID]/DonateButton';
 import { ShareButton } from '@frontend/[pageID]/ShareButton';
 import clsx from 'clsx';
 import { HappinessConfig } from 'happiness.config';
+import { Markdown } from 'paris/markdown';
 import { Text } from 'paris/text';
 import { pvar } from 'paris/theme';
 import type { FC } from 'react';
 import { Fragment } from 'react';
 import SparkMD5 from 'spark-md5';
 import { Avatar } from 'src/components/Avatar';
-import { Markdown } from 'src/components/Markdown/Markdown';
 import { formatCurrency } from 'src/util/formatCurrency';
 
 const RECENT_DONATION_COUNT = 5;

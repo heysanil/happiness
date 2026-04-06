@@ -6,11 +6,11 @@ import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import { HappinessConfig } from 'happiness.config';
 import { Card } from 'paris/card';
+import { Markdown } from 'paris/markdown';
 import { Text } from 'paris/text';
 import { pvar } from 'paris/theme';
 import type { FC } from 'react';
 import SparkMD5 from 'spark-md5';
-import { Markdown } from 'src/components/Markdown/Markdown';
 import { formatCurrency } from 'src/util/formatCurrency';
 
 export const StoryPage: FC<{
