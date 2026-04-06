@@ -127,6 +127,52 @@ export const PageProperties = (
             'When true, hides the raised amount and progress bar from the public page.',
         default: false,
     },
+    presets: {
+        type: 'array',
+        description:
+            'Custom donation amount presets. When null, default presets are used. When all presets include a name, the frontend renders a tier view.',
+        nullable: true,
+        items: {
+            type: 'object',
+            required: ['amount'],
+            properties: {
+                amount: {
+                    type: 'number',
+                    description: 'Donation amount in cents.',
+                    example: 5000,
+                },
+                name: {
+                    type: 'string',
+                    description: 'Tier name displayed alongside the amount.',
+                    example: 'Supporter',
+                    maxLength: 100,
+                },
+                description: {
+                    type: 'string',
+                    description: 'Tier description displayed below the name.',
+                    example: 'Help us keep the lights on',
+                    maxLength: 200,
+                },
+            },
+        },
+        example: [
+            {
+                amount: 1000,
+                name: 'Supporter',
+                description: 'Help us keep the lights on',
+            },
+            {
+                amount: 5000,
+                name: 'Champion',
+                description: "Fund a student's tuition",
+            },
+            {
+                amount: 25000,
+                name: 'Patron',
+                description: 'Full scholarship for a semester',
+            },
+        ],
+    },
     ...(readOnly ? timestamps : {}),
 });
 
