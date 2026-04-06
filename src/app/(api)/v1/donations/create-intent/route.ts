@@ -1,5 +1,8 @@
 import { stripe } from '@lib/stripe';
-import { DonationConfigSchema } from '@v1/donations/checkout/DonationConfig';
+import {
+    computeTipAmount,
+    DonationConfigSchema,
+} from '@v1/donations/checkout/DonationConfig';
 import { handleErrors } from '@v1/responses/handleErrors';
 import { HappinessConfig } from 'happiness.config';
 import type { NextRequest } from 'next/server';
@@ -15,7 +18,11 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         const donationID = generateID(Prefixes.Donation);
         const isRecurring = validated.frequency === 'Monthly';
 
-        const tipAmount = Math.round(validated.tipPercent * validated.amount);
+        const tipAmount = computeTipAmount(
+            validated.amount,
+            validated.tipPercent,
+            validated.tipFixed,
+        );
         const totalAmount = validated.amount + tipAmount;
 
         const metadata = {

@@ -13,7 +13,10 @@ import type {
     StripeLinkAuthenticationElementChangeEvent,
 } from '@stripe/stripe-js';
 import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
-import { estimateFee } from '@v1/donations/checkout/DonationConfig';
+import {
+    computeTipAmount,
+    estimateFee,
+} from '@v1/donations/checkout/DonationConfig';
 import { Text } from 'paris/text';
 import { forwardRef, useEffect, useState } from 'react';
 import { formatCurrency } from 'src/util/formatCurrency';
@@ -44,8 +47,10 @@ export const CheckoutForm = forwardRef<
 
         const estFee = estimateFee(donation.amount);
         const feeAmount = donation.coverFees ? estFee : 0;
-        const tipAmount = Math.round(
-            (donation.amount + feeAmount) * donation.tipPercent,
+        const tipAmount = computeTipAmount(
+            donation.amount + feeAmount,
+            donation.tipPercent,
+            donation.tipFixed,
         );
         const total = donation.amount + feeAmount + tipAmount;
 
@@ -149,7 +154,7 @@ export const CheckoutForm = forwardRef<
             >
                 <div className="flex flex-col gap-3">
                     <Text kind="paragraphSmall" style={{ fontWeight: 500 }}>
-                        Order Summary
+                        Order summary
                     </Text>
                     <div className="flex flex-col gap-1">
                         <div className="flex justify-between">
@@ -171,7 +176,9 @@ export const CheckoutForm = forwardRef<
                         {tipAmount > 0 && (
                             <div className="flex justify-between">
                                 <Text kind="paragraphXSmall">
-                                    {`Tip (${donation.tipPercent * 100}%)`}
+                                    {donation.tipFixed > 0
+                                        ? 'Tip'
+                                        : `Tip (${donation.tipPercent * 100}%)`}
                                 </Text>
                                 <Text kind="paragraphXSmall">
                                     {formatCurrency(tipAmount, 2)}

@@ -6,8 +6,12 @@ import { stripePromise } from '@lib/stripe/client';
 import { Elements, useElements } from '@stripe/react-stripe-js';
 import type { DonationConfig } from '@v1/donations/checkout/DonationConfig';
 import {
+    computeTipAmount,
     estimateFee,
     FrequencyOptions,
+    TIP_FIXED_PRESETS,
+    TIP_FIXED_THRESHOLD,
+    TIP_PERCENT_PRESETS,
 } from '@v1/donations/checkout/DonationConfig';
 import clsx from 'clsx';
 import { HappinessConfig } from 'happiness.config';
@@ -51,7 +55,8 @@ const initialDonation: DonationConfig = {
     anonymous: false,
     projectName: HappinessConfig.name,
     pageID: '',
-    tipPercent: 0.1,
+    tipPercent: 0,
+    tipFixed: 300,
     email: '',
     donorName: '',
 };
@@ -59,7 +64,11 @@ const initialDonation: DonationConfig = {
 /** Compute the total amount in cents for a given donation config */
 const computeTotal = (donation: DonationConfig) => {
     const fee = donation.coverFees ? estimateFee(donation.amount) : 0;
-    const tip = Math.round((donation.amount + fee) * donation.tipPercent);
+    const tip = computeTipAmount(
+        donation.amount + fee,
+        donation.tipPercent,
+        donation.tipFixed,
+    );
     return donation.amount + fee + tip;
 };
 
@@ -265,6 +274,35 @@ const DonateDrawerInner = ({
     );
 
     const isTierView = parsedPresets?.every((p) => p.name);
+
+    const hasTip = donation.tipPercent !== 0 || donation.tipFixed !== 0;
+    const useFixedTip = donation.amount < TIP_FIXED_THRESHOLD;
+
+    // Switch tip mode when donation amount crosses the $20 threshold
+    useEffect(() => {
+        if (!hasTip) return;
+        if (useFixedTip && donation.tipFixed === 0) {
+            // Crossed below threshold — switch to fixed
+            setDonation((d) => ({
+                ...d,
+                tipFixed: TIP_FIXED_PRESETS[1],
+                tipPercent: 0,
+            }));
+        } else if (!useFixedTip && donation.tipPercent === 0) {
+            // Crossed above threshold — switch to percent
+            setDonation((d) => ({
+                ...d,
+                tipPercent: TIP_PERCENT_PRESETS[1],
+                tipFixed: 0,
+            }));
+        }
+    }, [
+        useFixedTip,
+        hasTip,
+        donation.tipFixed,
+        donation.tipPercent,
+        setDonation,
+    ]);
 
     // Keep Elements amount in sync with donation total
     useEffect(() => {
@@ -522,46 +560,96 @@ const DonateDrawerInner = ({
                     </div>
                     <div className={clsx(styles.TempCheckboxSpacing)}>
                         <Checkbox
-                            checked={donation.tipPercent !== 0}
+                            checked={
+                                donation.tipPercent !== 0 ||
+                                donation.tipFixed !== 0
+                            }
                             onChange={(e) => {
-                                setDonation((d) => ({
-                                    ...d,
-                                    tipPercent: e ? 0.05 : 0,
-                                }));
+                                if (e) {
+                                    const useFixed =
+                                        donation.amount < TIP_FIXED_THRESHOLD;
+                                    setDonation((d) => ({
+                                        ...d,
+                                        tipPercent: useFixed
+                                            ? 0
+                                            : TIP_PERCENT_PRESETS[1],
+                                        tipFixed: useFixed
+                                            ? TIP_FIXED_PRESETS[1]
+                                            : 0,
+                                    }));
+                                } else {
+                                    setDonation((d) => ({
+                                        ...d,
+                                        tipPercent: 0,
+                                        tipFixed: 0,
+                                    }));
+                                }
                             }}
                         >
                             <Text kind="paragraphXSmall">
                                 Add a tip for {HappinessConfig.name}
                             </Text>
                         </Checkbox>
-                        {donation.tipPercent !== 0 ? (
+                        {donation.tipPercent !== 0 ||
+                        donation.tipFixed !== 0 ? (
                             <div className="flex flex-col mt-4 gap-4">
                                 <Text kind="paragraphXSmall">
                                     {HappinessConfig.tipDescription}
                                 </Text>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {[0.05, 0.1, 0.2].map((pct) => (
-                                        <DonationAmountSelector
-                                            key={`tip-${pct}`}
-                                            size="small"
-                                            selected={
-                                                donation.tipPercent === pct
-                                            }
-                                            onClick={() => {
-                                                setDonation((d) => ({
-                                                    ...d,
-                                                    tipPercent: pct,
-                                                }));
-                                            }}
-                                        >
-                                            <Text
-                                                kind="paragraphXSmall"
-                                                style={{ fontWeight: 500 }}
-                                            >
-                                                {pct * 100}%
-                                            </Text>
-                                        </DonationAmountSelector>
-                                    ))}
+                                    {donation.amount < TIP_FIXED_THRESHOLD
+                                        ? TIP_FIXED_PRESETS.map((cents) => (
+                                              <DonationAmountSelector
+                                                  key={`tip-fixed-${cents}`}
+                                                  size="small"
+                                                  selected={
+                                                      donation.tipFixed ===
+                                                      cents
+                                                  }
+                                                  onClick={() => {
+                                                      setDonation((d) => ({
+                                                          ...d,
+                                                          tipFixed: cents,
+                                                          tipPercent: 0,
+                                                      }));
+                                                  }}
+                                              >
+                                                  <Text
+                                                      kind="paragraphXSmall"
+                                                      style={{
+                                                          fontWeight: 500,
+                                                      }}
+                                                  >
+                                                      {formatCurrency(cents, 0)}
+                                                  </Text>
+                                              </DonationAmountSelector>
+                                          ))
+                                        : TIP_PERCENT_PRESETS.map((pct) => (
+                                              <DonationAmountSelector
+                                                  key={`tip-pct-${pct}`}
+                                                  size="small"
+                                                  selected={
+                                                      donation.tipPercent ===
+                                                      pct
+                                                  }
+                                                  onClick={() => {
+                                                      setDonation((d) => ({
+                                                          ...d,
+                                                          tipPercent: pct,
+                                                          tipFixed: 0,
+                                                      }));
+                                                  }}
+                                              >
+                                                  <Text
+                                                      kind="paragraphXSmall"
+                                                      style={{
+                                                          fontWeight: 500,
+                                                      }}
+                                                  >
+                                                      {pct * 100}%
+                                                  </Text>
+                                              </DonationAmountSelector>
+                                          ))}
                                 </div>
                             </div>
                         ) : null}

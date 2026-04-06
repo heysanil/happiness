@@ -1,5 +1,8 @@
 import { stripe } from '@lib/stripe/index';
-import { DonationConfigSchema } from '@v1/donations/checkout/DonationConfig';
+import {
+    computeTipAmount,
+    DonationConfigSchema,
+} from '@v1/donations/checkout/DonationConfig';
 import { HappinessConfig } from 'happiness.config';
 import { HappinessError } from 'src/util/HappinessError';
 
@@ -26,6 +29,7 @@ export const createDonationCheckout = async (
         projectName: config.projectName,
         pageID: config.pageID,
         tipPercent: Number(config.tipPercent),
+        tipFixed: Number(config.tipFixed ?? 0),
     });
 
     const isRecurring = validated.frequency === 'Monthly';
@@ -40,7 +44,7 @@ export const createDonationCheckout = async (
         createdByHappiness: 'true',
         pageID: validated.pageID,
         visible: `${!validated.anonymous}`,
-        tipAmount: `${Math.round(validated.tipPercent * validated.amount)}`,
+        tipAmount: `${computeTipAmount(validated.amount, validated.tipPercent, validated.tipFixed)}`,
         ...(validated.message ? { message: validated.message } : {}),
     };
 
@@ -63,8 +67,10 @@ export const createDonationCheckout = async (
             },
             {
                 price_data: {
-                    unit_amount: Math.round(
-                        validated.tipPercent * validated.amount,
+                    unit_amount: computeTipAmount(
+                        validated.amount,
+                        validated.tipPercent,
+                        validated.tipFixed,
                     ),
                     currency: 'usd',
                     product_data: {
