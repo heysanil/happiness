@@ -2,6 +2,7 @@ import { db } from '@db/init';
 import { listDonations } from '@db/ops/donations/listDonations';
 import { getPage } from '@db/ops/pages/getPage';
 import { updatePage } from '@db/ops/pages/updatePage';
+import type { Donation } from '@db/schema';
 import { donations } from '@db/schema';
 import { refundPaymentIntent } from '@lib/stripe/refundPaymentIntent';
 import { authorize } from '@v1/middleware/authorize';
@@ -27,9 +28,9 @@ export const POST = async (
         const page = await getPage(id);
 
         // Fetch all donations for this page
-        const allDonations = await listDonations({
+        const allDonations = (await listDonations({
             filter: { page: page.id },
-        });
+        })) as Donation[];
 
         const refundCutoff = new Date();
         refundCutoff.setDate(

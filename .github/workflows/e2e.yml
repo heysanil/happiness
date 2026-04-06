@@ -1,0 +1,219 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: namespace-profile-default
+    outputs:
+      results: ${{ steps.test.outputs.results }}
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpass
+          MYSQL_DATABASE: happiness_test
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
+
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Push Drizzle schema
+        run: DATABASE_URL=mysql://root:testpass@127.0.0.1:3307/happiness_test bunx drizzle-kit push:mysql --config ./drizzle.config.ts
+
+      - name: Run E2E tests
+        id: test
+        env:
+          DATABASE_DRIVER: mysql2
+          DATABASE_URL: mysql://root:testpass@localhost:3307/happiness_test
+          DATABASE_TABLE_PREFIX: happiness
+          HAPPINESS_ROOT_API_KEY: test-root-api-key-e2e
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_TEST_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_TEST_ACCOUNT_ID }}
+          NEXT_PUBLIC_STRIPE_ACCOUNT_ID: ${{ secrets.STRIPE_TEST_ACCOUNT_ID }}
+          STRIPE_WEBHOOK_SECRET: whsec_test_local_e2e_secret
+          BETTER_AUTH_SECRET: test-auth-secret-e2e-github-actions
+          BETTER_AUTH_URL: http://localhost:3000
+          AUTH_REDIS_DRIVER: ioredis
+          REDIS_URL: redis://localhost:6380
+          SMTP_HOST: localhost
+          SMTP_PORT: "1025"
+          SMTP_USER: test
+          SMTP_PASS: test
+          SMTP_FROM: noreply@test.local
+          NEXT_PUBLIC_APP_NAME: Happiness Test
+          NEXT_PUBLIC_APP_DESCRIPTION: E2E Test Instance
+          NEXT_PUBLIC_DEFAULT_BASE_URL: http://localhost:3000
+          NEXT_PUBLIC_LOGO: /logo.svg
+          NEXT_PUBLIC_FAVICON: /favicon.ico
+          NEXT_PUBLIC_FISCAL_SPONSOR_MODE: "true"
+          NEXT_PUBLIC_FISCAL_SPONSOR_NAME: Test Fiscal Sponsor
+          NEXT_PUBLIC_FISCAL_SPONSOR_EIN: 00-0000000
+          NEXT_PUBLIC_PLATFORM_FEE: "0.025"
+          CI: "true"
+        run: |
+          set +e
+          START_NS=$(date +%s%N)
+          OUTPUT=$(bunx playwright test --reporter=list 2>&1)
+          EXIT_CODE=$?
+          END_NS=$(date +%s%N)
+          MS=$(( (END_NS - START_NS) / 1000000 ))
+          echo "$OUTPUT"
+          TOTAL_PASS=$(echo "$OUTPUT" | grep -oP '\d+ passed' | grep -oP '\d+' || echo "0")
+          TOTAL_FAIL=$(echo "$OUTPUT" | grep -oP '\d+ failed' | grep -oP '\d+' || echo "0")
+          echo "results={\"passed\":${TOTAL_PASS},\"failed\":${TOTAL_FAIL},\"ms\":${MS}}" >> "$GITHUB_OUTPUT"
+          exit $EXIT_CODE
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  comment:
+    name: PR Comment
+    runs-on: namespace-profile-default
+    needs: [e2e]
+    if: github.event_name == 'pull_request' && always()
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        env:
+          E2E_RESULT: ${{ needs.e2e.result }}
+          E2E_DATA: ${{ needs.e2e.outputs.results }}
+          SERVER_URL: ${{ github.server_url }}
+          REPO_FULL: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            const e2eResult = process.env.E2E_RESULT;
+            const e2eData = JSON.parse(process.env.E2E_DATA || '{}');
+            const runUrl = `${process.env.SERVER_URL}/${process.env.REPO_FULL}/actions/runs/${process.env.RUN_ID}`;
+
+            const passed = e2eData.passed || 0;
+            const failed = e2eData.failed || 0;
+            const ms = e2eData.ms || 0;
+            const allGreen = e2eResult === 'success';
+
+            const fmt = (ms) => ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+            const statusIcon = (r) => r === 'success' ? '✅' : r === 'skipped' ? '⏭️' : '❌';
+
+            let body = '';
+
+            // Header
+            if (allGreen) {
+              body += `## ✅ E2E Tests — All ${passed} tests passed\n\n`;
+            } else {
+              body += `## ❌ E2E Tests — ${failed > 0 ? `${failed} test${failed === 1 ? '' : 's'} failed` : 'Failed'}\n\n`;
+            }
+
+            body += `[View workflow run](${runUrl})\n\n`;
+
+            // Summary table
+            body += '| Check | Status | Details |\n';
+            body += '|:------|:------:|:--------|\n';
+            body += `| **Playwright E2E** | ${statusIcon(e2eResult)} | `;
+            if (passed > 0 || failed > 0) {
+              body += `${passed} passed`;
+              if (failed > 0) body += `, ${failed} failed`;
+              body += ` in ${fmt(ms)} · Chromium + MySQL + Redis + MailPit`;
+            } else {
+              body += `[View logs](${runUrl})`;
+            }
+            body += ' |\n\n';
+
+            // Breakdown (collapsible)
+            body += '<details><summary><strong>E2E test details</strong></summary>\n\n';
+            body += `Ran ${passed + failed} Playwright tests in headless Chromium against a full Next.js server with:\n`;
+            body += '- **MySQL 8** — Drizzle ORM schema pushed via `drizzle-kit`\n';
+            body += '- **Redis 7** — Better Auth OTP session storage\n';
+            body += '- **MailPit** — SMTP capture for email OTP verification\n';
+            body += '- **Stripe Test Mode** — Real PaymentIntent creation and webhook simulation\n\n';
+            body += '**Coverage:** Pages CRUD API, Donations API, Donors API, Stripe Webhooks, ';
+            body += 'Donation page UI, Portal login OTP flow, Donor dashboard, Receipt PDF, ';
+            body += 'One-time & recurring donation flows, Full donor portal journey\n\n';
+            if (!allGreen) {
+              body += `> **Traces & screenshots:** [Download Playwright report artifact](${runUrl})\n\n`;
+            }
+            body += '</details>\n\n';
+
+            // Footer
+            body += '---\n';
+            body += '<sub>';
+            body += `Docker services: MySQL 8.0, Redis 7, MailPit · `;
+            body += `[View full run](${runUrl})`;
+            body += '</sub>\n';
+
+            // Upsert comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user?.type === 'Bot' && c.body?.includes('E2E Tests —')
+            );
+
+            const params = { owner: context.repo.owner, repo: context.repo.repo, body };
+
+            if (existing) {
+              await github.rest.issues.updateComment({ ...params, comment_id: existing.id });
+            } else {
+              await github.rest.issues.createComment({ ...params, issue_number: context.issue.number });
+            }

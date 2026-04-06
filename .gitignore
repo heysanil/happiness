@@ -28,6 +28,7 @@ yarn-error.log*
 
 # local env files
 .env.local
+.env.test
 
 # vercel
 .vercel
@@ -37,3 +38,9 @@ yarn-error.log*
 next-env.d.ts
 .env*.local
 .superpowers/
+
+# E2E test artifacts
+/playwright-report/
+/test-results/
+/e2e/.test-data.json
+.portal-dashboard-auth.json
