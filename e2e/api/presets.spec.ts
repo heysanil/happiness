@@ -55,6 +55,28 @@ test.describe
             expect(page.presets).toEqual(tierPresets);
         });
 
+        test('PATCH /v1/pages/{id} — updates presets with name and description', async () => {
+            const newTierPresets = [
+                {
+                    amount: 2000,
+                    name: 'Bronze',
+                    description: 'Entry-level support',
+                },
+                {
+                    amount: 10000,
+                    name: 'Silver',
+                    description: 'Mid-level support',
+                },
+            ];
+            const { status, data } = await api.updatePage(pageId, {
+                presets: newTierPresets,
+            });
+            const page = data as Record<string, unknown>;
+
+            expect(status).toBe(200);
+            expect(page.presets).toEqual(newTierPresets);
+        });
+
         test('PATCH /v1/pages/{id} — updates presets to grid-only', async () => {
             const { status, data } = await api.updatePage(pageId, {
                 presets: gridPresets,
