@@ -20,8 +20,18 @@ const mysqlTable = mysqlTableCreator(
 
 export const presetItemSchema = z.object({
     amount: z.number().int().positive(),
-    name: z.string().min(1).max(100).optional(),
-    description: z.string().min(1).max(200).optional(),
+    name: z
+        .string()
+        .min(1)
+        .max(100)
+        .nullish()
+        .transform((v) => v ?? undefined),
+    description: z
+        .string()
+        .min(1)
+        .max(200)
+        .nullish()
+        .transform((v) => v ?? undefined),
 });
 
 export const presetsSchema = z.array(presetItemSchema).min(1).max(10);
