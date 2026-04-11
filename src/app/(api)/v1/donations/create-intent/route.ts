@@ -9,12 +9,18 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { generateID, Prefixes } from 'src/util/generateID';
 import { HappinessError } from 'src/util/HappinessError';
+import { z } from 'zod';
+
+const CreateIntentSchema = DonationConfigSchema.extend({
+    idempotencyKey: z.string().uuid().optional(),
+});
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
     try {
         const body = await request.json();
-        const validated = await DonationConfigSchema.parseAsync(body);
+        const validated = await CreateIntentSchema.parseAsync(body);
 
+        const idempotencyKey = validated.idempotencyKey;
         const donationID = generateID(Prefixes.Donation);
         const isRecurring = validated.frequency === 'Monthly';
 
@@ -40,14 +46,20 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
         if (!isRecurring) {
             // One-time donation: create a PaymentIntent
-            const paymentIntent = await stripe.paymentIntents.create({
-                amount: totalAmount,
-                currency: 'usd',
-                metadata,
-                description,
-                receipt_email: validated.email,
-                automatic_payment_methods: { enabled: true },
-            });
+            const stripeOptions = idempotencyKey
+                ? { idempotencyKey: `pi_${idempotencyKey}` }
+                : undefined;
+            const paymentIntent = await stripe.paymentIntents.create(
+                {
+                    amount: totalAmount,
+                    currency: 'usd',
+                    metadata,
+                    description,
+                    receipt_email: validated.email,
+                    automatic_payment_methods: { enabled: true },
+                },
+                stripeOptions,
+            );
 
             if (!paymentIntent.client_secret) {
                 throw new HappinessError(
@@ -56,63 +68,84 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 );
             }
 
+            // On idempotent replay, Stripe returns the original PI with its
+            // metadata — use that donationID so client and webhook stay in sync.
+            const effectiveDonationID =
+                paymentIntent.metadata?.donationID || donationID;
+
             return NextResponse.json({
                 clientSecret: paymentIntent.client_secret,
-                donationID,
+                donationID: effectiveDonationID,
             });
         }
 
         // Recurring donation: create Products, Customer, and Subscription
         // Subscription price_data requires product IDs (not inline product_data)
-        const donationProduct = await stripe.products.create({
-            name: 'Donation',
-            description,
-        });
+        const idemKey = (suffix: string) =>
+            idempotencyKey
+                ? { idempotencyKey: `${suffix}_${idempotencyKey}` }
+                : undefined;
+
+        const donationProduct = await stripe.products.create(
+            { name: 'Donation', description },
+            idemKey('prod'),
+        );
         const tipProduct =
             tipAmount > 0
-                ? await stripe.products.create({
-                      name: 'Tip',
-                      description: `Supporting ${HappinessConfig.name}`,
-                  })
+                ? await stripe.products.create(
+                      {
+                          name: 'Tip',
+                          description: `Supporting ${HappinessConfig.name}`,
+                      },
+                      idemKey('tip_prod'),
+                  )
                 : null;
 
-        const customer = await stripe.customers.create({
-            email: validated.email,
-            name: validated.donorName || undefined,
-            metadata: { createdByHappiness: 'true' },
-        });
-
-        const subscription = await stripe.subscriptions.create({
-            customer: customer.id,
-            items: [
-                {
-                    price_data: {
-                        unit_amount: validated.amount,
-                        currency: 'usd',
-                        product: donationProduct.id,
-                        recurring: { interval: 'month' },
-                    },
-                },
-                ...(tipAmount > 0 && tipProduct
-                    ? [
-                          {
-                              price_data: {
-                                  unit_amount: tipAmount,
-                                  currency: 'usd',
-                                  product: tipProduct.id,
-                                  recurring: { interval: 'month' as const },
-                              },
-                          },
-                      ]
-                    : []),
-            ],
-            payment_behavior: 'default_incomplete',
-            payment_settings: {
-                save_default_payment_method: 'on_subscription',
+        const customer = await stripe.customers.create(
+            {
+                email: validated.email,
+                name: validated.donorName || undefined,
+                metadata: { createdByHappiness: 'true' },
             },
-            metadata,
-            expand: ['latest_invoice.payment_intent'],
-        });
+            idemKey('cus'),
+        );
+
+        const subscription = await stripe.subscriptions.create(
+            {
+                customer: customer.id,
+                items: [
+                    {
+                        price_data: {
+                            unit_amount: validated.amount,
+                            currency: 'usd',
+                            product: donationProduct.id,
+                            recurring: { interval: 'month' },
+                        },
+                    },
+                    ...(tipAmount > 0 && tipProduct
+                        ? [
+                              {
+                                  price_data: {
+                                      unit_amount: tipAmount,
+                                      currency: 'usd',
+                                      product: tipProduct.id,
+                                      recurring: {
+                                          interval: 'month' as const,
+                                      },
+                                  },
+                              },
+                          ]
+                        : []),
+                ],
+                payment_behavior: 'default_incomplete',
+                payment_settings: {
+                    save_default_payment_method: 'on_subscription',
+                },
+                metadata,
+                expand: ['latest_invoice.payment_intent'],
+            },
+            idemKey('sub'),
+        );
 
         const invoice = subscription.latest_invoice;
         if (!invoice || typeof invoice === 'string') {
@@ -129,9 +162,13 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             );
         }
 
+        // On idempotent replay, read donationID from the subscription metadata
+        const effectiveSubDonationID =
+            subscription.metadata?.donationID || donationID;
+
         return NextResponse.json({
             clientSecret: pi.client_secret,
-            donationID,
+            donationID: effectiveSubDonationID,
         });
     } catch (e) {
         return handleErrors(e);

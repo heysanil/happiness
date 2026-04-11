@@ -18,7 +18,7 @@ import {
     estimateFee,
 } from '@v1/donations/checkout/DonationConfig';
 import { Text } from 'paris/text';
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { formatCurrency } from 'src/util/formatCurrency';
 
 export const CheckoutForm = forwardRef<
@@ -44,6 +44,8 @@ export const CheckoutForm = forwardRef<
         const [loading, setLoading] = useState(false);
         const [expressCheckoutAvailable, setExpressCheckoutAvailable] =
             useState(false);
+        const submittingRef = useRef(false);
+        const idempotencyKeyRef = useRef(crypto.randomUUID());
 
         const estFee = estimateFee(donation.amount);
         const feeAmount = donation.coverFees ? estFee : 0;
@@ -63,12 +65,15 @@ export const CheckoutForm = forwardRef<
             name?: string;
         }) => {
             if (!stripe || !elements) return;
+            if (submittingRef.current) return;
+            submittingRef.current = true;
 
             const email = billingOverrides?.email || donation.email;
             const name = billingOverrides?.name || donation.donorName;
 
             const { error: submitError } = await elements.submit();
             if (submitError) {
+                submittingRef.current = false;
                 throw new Error(submitError.message ?? 'Validation failed');
             }
 
@@ -80,6 +85,7 @@ export const CheckoutForm = forwardRef<
                     amount: donation.amount + feeAmount,
                     email,
                     donorName: name,
+                    idempotencyKey: idempotencyKeyRef.current,
                 }),
             });
 
@@ -120,6 +126,8 @@ export const CheckoutForm = forwardRef<
             try {
                 await createIntentAndConfirm();
             } catch (err) {
+                submittingRef.current = false;
+                idempotencyKeyRef.current = crypto.randomUUID();
                 setError(
                     err instanceof Error ? err.message : 'Payment failed.',
                 );
@@ -138,6 +146,8 @@ export const CheckoutForm = forwardRef<
                     name: event.billingDetails?.name || undefined,
                 });
             } catch (err) {
+                submittingRef.current = false;
+                idempotencyKeyRef.current = crypto.randomUUID();
                 event.paymentFailed({ reason: 'fail' });
                 setError(
                     err instanceof Error ? err.message : 'Payment failed.',
