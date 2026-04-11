@@ -91,19 +91,6 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 const balanceTx =
                     charge.balance_transaction as Stripe.BalanceTransaction;
 
-                if (customer?.email) {
-                    await stripe.paymentIntents
-                        .update(pi.id, {
-                            receipt_email: customer.email,
-                        })
-                        .catch((e) => {
-                            console.error(
-                                'Failed to update payment intent receipt email:',
-                                e,
-                            );
-                        });
-                }
-
                 const donorEmail =
                     piMeta.email ||
                     charge.billing_details?.email ||
@@ -237,20 +224,6 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 const charge = pi.latest_charge as Stripe.Charge;
                 const balanceTx =
                     charge.balance_transaction as Stripe.BalanceTransaction;
-
-                if (customer.email) {
-                    // Add customer email as receipt_email for payment intent
-                    await stripe.paymentIntents
-                        .update(pi.id, {
-                            receipt_email: customer.email,
-                        })
-                        .catch((e) => {
-                            console.error(
-                                'Failed to update payment intent receipt email:',
-                                e,
-                            );
-                        });
-                }
 
                 const invoiceDonorEmail =
                     metadata.email ||

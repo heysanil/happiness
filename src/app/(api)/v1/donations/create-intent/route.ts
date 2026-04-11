@@ -55,7 +55,6 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                     currency: 'usd',
                     metadata,
                     description,
-                    receipt_email: validated.email,
                     automatic_payment_methods: { enabled: true },
                 },
                 stripeOptions,

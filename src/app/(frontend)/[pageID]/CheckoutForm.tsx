@@ -101,7 +101,6 @@ export const CheckoutForm = forwardRef<
                 clientSecret,
                 confirmParams: {
                     return_url: returnUrl,
-                    receipt_email: email,
                     payment_method_data: {
                         billing_details: {
                             email,
