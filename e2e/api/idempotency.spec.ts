@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { api } from '../helpers/api-client';
 import { BASE_URL, SIMPLE_PAGE_ID } from '../helpers/fixtures';
-import { generateWebhookPayload } from '../helpers/stripe';
+import { generateWebhookPayload, getTestStripe } from '../helpers/stripe';
 
 const makeIntentPayload = (overrides?: Record<string, unknown>) => ({
     amount: 2500,
@@ -102,24 +102,22 @@ test.describe('Duplicate Payment Prevention', () => {
 
     test.describe('webhook replay idempotency', () => {
         test('replaying payment_intent.succeeded creates only one donation', async () => {
+            const stripe = getTestStripe();
             const donationID = `dn_idemptest${Date.now().toString(36)}`.slice(
                 0,
                 16,
             );
-            const piID = `pi_test_replay_${Date.now()}`;
 
-            // First, create a donation directly so the page exists and we have a baseline count
-            const donationsBefore = await api.listDonations({
-                page: SIMPLE_PAGE_ID,
-            });
-            const countBefore = (donationsBefore.data as unknown[]).length;
-
-            // Create the webhook event
-            const webhookData = {
-                id: piID,
-                amount_received: 2500,
+            // Create a real PaymentIntent on Stripe so the handler can retrieve it
+            const pi = await stripe.paymentIntents.create({
+                amount: 2500,
                 currency: 'usd',
-                invoice: null,
+                payment_method: 'pm_card_visa',
+                confirm: true,
+                automatic_payment_methods: {
+                    enabled: true,
+                    allow_redirects: 'never',
+                },
                 metadata: {
                     createdByHappiness: 'true',
                     pageID: SIMPLE_PAGE_ID,
@@ -129,16 +127,21 @@ test.describe('Duplicate Payment Prevention', () => {
                     email: `replay-${Date.now()}@test.local`,
                     donorName: 'Replay Test',
                 },
-                latest_charge: {
-                    balance_transaction: {
-                        fee: 100,
-                        currency: 'usd',
-                    },
-                    billing_details: {
-                        email: `replay-${Date.now()}@test.local`,
-                        name: 'Replay Test',
-                    },
-                },
+            });
+
+            // Get a baseline donation count
+            const donationsBefore = await api.listDonations({
+                page: SIMPLE_PAGE_ID,
+            });
+            const countBefore = (donationsBefore.data as unknown[]).length;
+
+            // Build the webhook event from the real PI
+            const webhookData = {
+                id: pi.id,
+                amount_received: pi.amount_received,
+                currency: pi.currency,
+                invoice: null,
+                metadata: pi.metadata,
                 customer: null,
             };
 

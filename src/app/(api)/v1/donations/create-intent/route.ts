@@ -21,7 +21,10 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         const validated = await CreateIntentSchema.parseAsync(body);
 
         const idempotencyKey = validated.idempotencyKey;
-        const donationID = generateID(Prefixes.Donation);
+        const donationID = generateID(
+            Prefixes.Donation,
+            idempotencyKey ? `donation_${idempotencyKey}` : undefined,
+        );
         const isRecurring = validated.frequency === 'Monthly';
 
         const tipAmount = computeTipAmount(
