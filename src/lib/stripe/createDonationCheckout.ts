@@ -40,11 +40,14 @@ export const createDonationCheckout = async (
         ? `${successURL}&session_id={CHECKOUT_SESSION_ID}`
         : `${successURL}?session_id={CHECKOUT_SESSION_ID}`;
 
+    const happinessInstance = process.env.HAPPINESS_INSTANCE_ID;
+
     const metadata = {
         createdByHappiness: 'true',
         pageID: validated.pageID,
         visible: `${!validated.anonymous}`,
         tipAmount: `${computeTipAmount(validated.amount, validated.tipPercent, validated.tipFixed)}`,
+        ...(happinessInstance ? { happinessInstance } : {}),
         ...(validated.message ? { message: validated.message } : {}),
     };
 

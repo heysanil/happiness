@@ -34,6 +34,8 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
         );
         const totalAmount = validated.amount + tipAmount;
 
+        const happinessInstance = process.env.HAPPINESS_INSTANCE_ID;
+
         const metadata = {
             createdByHappiness: 'true',
             pageID: validated.pageID,
@@ -42,6 +44,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
             donationID,
             email: validated.email,
             donorName: validated.donorName || '',
+            ...(happinessInstance ? { happinessInstance } : {}),
             ...(validated.message ? { message: validated.message } : {}),
         };
 

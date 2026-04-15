@@ -19,6 +19,11 @@ if (!stripeWebhookSecret)
         'Missing STRIPE_WEBHOOK_SECRET. Please add it to your environment.',
     );
 
+// Optional. When set, webhook events are only processed if their
+// metadata.happinessInstance matches this value. Used to isolate instances
+// that share a Stripe (Connect) account.
+const happinessInstanceID = process.env.HAPPINESS_INSTANCE_ID || null;
+
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
     try {
         const { headers } = request;
@@ -64,6 +69,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         tipAmount: z.string().optional(),
                         email: z.string().optional(),
                         donorName: z.string().optional(),
+                        happinessInstance: z.string().optional(),
                     })
                     .passthrough()
                     .spa(pi.metadata);
@@ -81,6 +87,23 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 }
 
                 const piMeta = validatePiMetadata.data;
+
+                // Gate: if this deployment has a configured instance ID, only
+                // process events whose metadata.happinessInstance matches.
+                // Events from other Happiness instances sharing the same Stripe
+                // account are acknowledged and ignored (no retry).
+                if (
+                    happinessInstanceID &&
+                    piMeta.happinessInstance !== happinessInstanceID
+                ) {
+                    return NextResponse.json(
+                        {
+                            status: 200,
+                            message: `Ignored: PaymentIntent created by Happiness instance '${piMeta.happinessInstance ?? 'unknown'}'; this instance is '${happinessInstanceID}'`,
+                        },
+                        { status: 200 },
+                    );
+                }
 
                 // Retrieve the charge with balance transaction for fee info
                 const piExpanded = await stripe.paymentIntents.retrieve(pi.id, {
@@ -185,6 +208,7 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                         tipAmount: z.string().optional(),
                         email: z.string().optional(),
                         donorName: z.string().optional(),
+                        happinessInstance: z.string().optional(),
                     })
                     .passthrough()
                     .spa(
@@ -205,6 +229,23 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
                 }
 
                 const metadata = validateMetadata.data;
+
+                // Gate: if this deployment has a configured instance ID, only
+                // process events whose metadata.happinessInstance matches.
+                // Events from other Happiness instances sharing the same Stripe
+                // account are acknowledged and ignored (no retry).
+                if (
+                    happinessInstanceID &&
+                    metadata.happinessInstance !== happinessInstanceID
+                ) {
+                    return NextResponse.json(
+                        {
+                            status: 200,
+                            message: `Ignored: invoice created by Happiness instance '${metadata.happinessInstance ?? 'unknown'}'; this instance is '${happinessInstanceID}'`,
+                        },
+                        { status: 200 },
+                    );
+                }
 
                 // Generate a donation ID if one wasn't provided, otherwise validate the one provided
                 const donationID =
