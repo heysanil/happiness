@@ -22,6 +22,7 @@ export const GET = async (request: Request) => {
 
         const beforeFilter = searchParams.get('before');
         const afterFilter = searchParams.get('after');
+        const redactAnonymous = searchParams.get('redactAnonymous') === 'true';
 
         return NextResponse.json(
             await listDonations({
@@ -36,6 +37,7 @@ export const GET = async (request: Request) => {
                     page: pageFilter,
                     before: beforeFilter ? new Date(beforeFilter) : undefined,
                     after: afterFilter ? new Date(afterFilter) : undefined,
+                    redactAnonymous,
                 },
             }),
         );
