@@ -1,10 +1,31 @@
 import { expect, test } from '@playwright/test';
 import { api } from '../helpers/api-client';
 import {
+    ANON_DONATION_ID,
+    ANON_DONOR_EMAIL,
+    ANON_DONOR_FIRST,
     BASE_URL,
     SIMPLE_PAGE_ID,
     TEST_DONATION_ID,
+    TEST_DONOR_EMAIL,
 } from '../helpers/fixtures';
+
+type DonationRow = {
+    id: string;
+    amount: number;
+    donor?: {
+        firstName: string | null;
+        lastName: string | null;
+        company: string | null;
+        email: string | null;
+        phone: string | null;
+        anonymous: boolean;
+    };
+    page?: { id: string };
+};
+
+const findByID = (rows: unknown, id: string): DonationRow | undefined =>
+    (rows as DonationRow[]).find((d) => d.id === id);
 
 test.describe('Donations API', () => {
     test('GET /v1/donations with auth — returns array', async () => {
@@ -96,5 +117,63 @@ test.describe('Donations API', () => {
         expect(status).toBe(200);
         expect(result.clientSecret).toBeTruthy();
         expect(result.donationID).toBeTruthy();
+    });
+
+    test('GET /v1/donations?include=donor&redactAnonymous=true — redacts anonymous PII, keeps non-anonymous', async () => {
+        const { status, data } = await api.listDonations({
+            include: 'donor',
+            page: SIMPLE_PAGE_ID,
+            redactAnonymous: 'true',
+        });
+        expect(status).toBe(200);
+
+        const anon = findByID(data, ANON_DONATION_ID);
+        expect(anon).toBeTruthy();
+        // Anonymous donor's PII is nulled at the DB layer...
+        expect(anon?.donor?.anonymous).toBe(true);
+        expect(anon?.donor?.firstName).toBeNull();
+        expect(anon?.donor?.lastName).toBeNull();
+        expect(anon?.donor?.company).toBeNull();
+        expect(anon?.donor?.email).toBeNull();
+        expect(anon?.donor?.phone).toBeNull();
+        // ...but the donation row itself is intact.
+        expect(anon?.amount).toBe(2500);
+
+        // The non-anonymous donor's PII is still returned.
+        const regular = findByID(data, TEST_DONATION_ID);
+        expect(regular?.donor?.anonymous).toBe(false);
+        expect(regular?.donor?.email).toBe(TEST_DONOR_EMAIL);
+        expect(regular?.donor?.firstName).toBeTruthy();
+
+        // The redacted PII must not leak anywhere in the payload.
+        const raw = JSON.stringify(data);
+        expect(raw).not.toContain(ANON_DONOR_EMAIL);
+        expect(raw).not.toContain(ANON_DONOR_FIRST);
+    });
+
+    test('GET /v1/donations?include=donor (no redactAnonymous) — anonymous PII returned (default unchanged)', async () => {
+        const { status, data } = await api.listDonations({
+            include: 'donor',
+            page: SIMPLE_PAGE_ID,
+        });
+        expect(status).toBe(200);
+
+        const anon = findByID(data, ANON_DONATION_ID);
+        expect(anon?.donor?.anonymous).toBe(true);
+        expect(anon?.donor?.email).toBe(ANON_DONOR_EMAIL);
+        expect(anon?.donor?.firstName).toBe(ANON_DONOR_FIRST);
+    });
+
+    test('GET /v1/donations?include=donor,page&redactAnonymous=true — page still included', async () => {
+        const { status, data } = await api.listDonations({
+            include: 'donor,page',
+            page: SIMPLE_PAGE_ID,
+            redactAnonymous: 'true',
+        });
+        expect(status).toBe(200);
+
+        const anon = findByID(data, ANON_DONATION_ID);
+        expect(anon?.donor?.firstName).toBeNull();
+        expect(anon?.page?.id).toBe(SIMPLE_PAGE_ID);
     });
 });
