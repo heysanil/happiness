@@ -22,6 +22,16 @@ export const DONATIONS_GET_SCHEMA: OperationObject = {
         FilterParam('Page'),
         FilterParam('Donor'),
         ...timestampFilters,
+        {
+            name: 'redactAnonymous',
+            in: 'query',
+            description:
+                "When true, anonymous donors' personally identifiable information (name, company, email, phone) is redacted at the database layer and returned as null. The donation and the donor's `anonymous` flag are still returned. Only takes effect when `donor` is included.",
+            example: '?redactAnonymous=true',
+            schema: {
+                type: 'boolean',
+            },
+        },
     ],
     responses: {
         200: {

@@ -12,6 +12,13 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 
 import {
+    ANON_DONATION_ID,
+    ANON_DONOR_COMPANY,
+    ANON_DONOR_EMAIL,
+    ANON_DONOR_FIRST,
+    ANON_DONOR_ID,
+    ANON_DONOR_LAST,
+    ANON_DONOR_PHONE,
     SIMPLE_PAGE_ID,
     SIMPLE_PAGE_SLUG,
     STORY_PAGE_ID,
@@ -152,6 +159,44 @@ async function seedTestData() {
             'E2E test donation',
             'stripe',
             'pi_e2e_test_seed_001',
+        ],
+    );
+
+    // Insert anonymous donor (PII present in DB, but flagged anonymous)
+    await pool.query(
+        `INSERT INTO \`${prefix}_donors\` (id, first_name, last_name, company, email, phone, anonymous)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)
+		 ON DUPLICATE KEY UPDATE email = VALUES(email)`,
+        [
+            ANON_DONOR_ID,
+            ANON_DONOR_FIRST,
+            ANON_DONOR_LAST,
+            ANON_DONOR_COMPANY,
+            ANON_DONOR_EMAIL,
+            ANON_DONOR_PHONE,
+            true,
+        ],
+    );
+
+    // Insert donation from the anonymous donor on the simple page
+    await pool.query(
+        `INSERT INTO \`${prefix}_donations\` (id, page_id, donor_id, amount, amount_currency, fee, fee_currency, fee_covered, tip_amount, visible, message, external_transaction_provider, external_transaction_id)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		 ON DUPLICATE KEY UPDATE id = VALUES(id)`,
+        [
+            ANON_DONATION_ID,
+            SIMPLE_PAGE_ID,
+            ANON_DONOR_ID,
+            2500, // $25.00
+            'usd',
+            75, // $0.75 fee
+            'usd',
+            false,
+            0,
+            false, // anonymous donations are not publicly visible
+            'E2E anonymous donation',
+            'stripe',
+            'pi_e2e_test_seed_anon',
         ],
     );
 

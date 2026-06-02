@@ -20,6 +20,13 @@ export const TEST_DONOR_EMAIL = 'e2e-donor@test.local';
 export const TEST_DONOR_FIRST = 'E2E';
 export const TEST_DONOR_LAST = 'Donor';
 
+// Anonymous donor — used to verify redactAnonymous PII redaction.
+export const ANON_DONOR_EMAIL = 'e2e-anon@test.local';
+export const ANON_DONOR_FIRST = 'Anon';
+export const ANON_DONOR_LAST = 'Donor';
+export const ANON_DONOR_COMPANY = 'Anon Co';
+export const ANON_DONOR_PHONE = '+15555550100';
+
 // -- MailPit ----------------------------------------------------------------
 
 export const MAILPIT_URL = 'http://localhost:8025';
@@ -32,3 +39,5 @@ export const SIMPLE_PAGE_ID = 'pg_e2esimple001';
 export const STORY_PAGE_ID = 'pg_e2estory0001';
 export const TEST_DONOR_ID = 'dr_e2edonor0001';
 export const TEST_DONATION_ID = 'dn_e2edonation1';
+export const ANON_DONOR_ID = 'dr_e2eanon00001';
+export const ANON_DONATION_ID = 'dn_e2eanondon01';
