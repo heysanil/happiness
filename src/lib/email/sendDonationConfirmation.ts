@@ -57,10 +57,7 @@ export async function sendDonationConfirmation(
 ): Promise<void> {
     const transporter = getTransporter();
     if (!transporter) {
-        console.warn(
-            '[email] SMTP not configured, skipping donation confirmation email',
-        );
-        return;
+        throw new Error('SMTP not configured');
     }
 
     const {
@@ -146,18 +143,14 @@ ${appName}`;
   <p style="color: #9ca3af; font-size: 13px; margin-top: 32px;">Thank you for your support!<br>${appName}</p>
 </div>`;
 
-    try {
-        await transporter.sendMail({
-            from: process.env.SMTP_FROM,
-            to: donorEmail,
-            subject: `Donation confirmation — ${amountStr} to ${campaignName}`,
-            text: textBody,
-            html: htmlBody,
-        });
-        console.log(
-            `[email] Donation confirmation sent to ${donorEmail} for ${donationID}`,
-        );
-    } catch (err) {
-        console.error('[email] Failed to send donation confirmation:', err);
-    }
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: donorEmail,
+        subject: `Donation confirmation — ${amountStr} to ${campaignName}`,
+        text: textBody,
+        html: htmlBody,
+    });
+    console.log(
+        `[email] Donation confirmation sent to ${donorEmail} for ${donationID}`,
+    );
 }
