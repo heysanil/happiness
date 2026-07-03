@@ -18,6 +18,11 @@ import layoutStyles from 'src/app/(frontend)/[pageID]/layout.module.scss';
 
 dayjs.extend(relativeTime);
 
+// force-static is required for revalidation to apply: without it this
+// segment has no generateStaticParams so it renders dynamically per-request,
+// and the PlanetScale driver's `cache: 'no-store'` fetches would otherwise
+// abort static generation (DYNAMIC_SERVER_USAGE).
+export const dynamic = 'force-static';
 export const revalidate = 60;
 
 export async function generateMetadata(
