@@ -94,22 +94,23 @@ test.describe('Donation page (simple)', () => {
             drawer.getByText(/make.*donation anonymous/i),
         ).toBeVisible();
     });
+});
 
-    test('draft/non-existent page returns 404', async ({ page }) => {
+test.describe('Unknown paths', () => {
+    test('non-existent page slug returns HTTP 404 with not-found page', async ({
+        page,
+    }) => {
         const response = await page.goto('/this-slug-does-not-exist-at-all');
 
-        // When getPage throws for a non-existent slug, the server responds
-        // with a 500 (error boundary) or the page shows an error state.
-        // In production mode, the error boundary renders "Something went wrong".
-        // Check either the HTTP status or the error page text.
-        const status = response?.status() ?? 0;
-        const hasErrorPage =
-            status >= 400 ||
-            (await page
-                .getByText(/not found|something went wrong/i)
-                .isVisible()
-                .catch(() => false));
+        expect(response?.status()).toBe(404);
+        await expect(page.getByText('Page not found')).toBeVisible();
+    });
 
-        expect(hasErrorPage).toBe(true);
+    test('non-existent embed slug returns HTTP 404', async ({ page }) => {
+        const response = await page.goto(
+            '/this-slug-does-not-exist-at-all/embed',
+        );
+
+        expect(response?.status()).toBe(404);
     });
 });

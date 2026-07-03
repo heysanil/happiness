@@ -1,7 +1,7 @@
 import { listDonations } from '@db/ops/donations/listDonations';
-import { getPage } from '@db/ops/pages/getPage';
 import type { Donation, Donor, Page } from '@db/schema';
 import { donations } from '@db/schema';
+import { getPageOrNotFound } from '@frontend/[pageID]/getPageOrNotFound';
 import { SimplePage } from '@frontend/[pageID]/SimplePage';
 import { StoryPage } from '@frontend/[pageID]/StoryPage';
 import { ThanksDialog } from '@frontend/[pageID]/ThanksDialog';
@@ -26,7 +26,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const params = await props.params;
     const { pageID } = params;
-    const page = await getPage(pageID);
+    const page = await getPageOrNotFound(pageID);
     return {
         title: page.title,
         description: page.subtitle || 'Donate now',
@@ -43,7 +43,7 @@ export default async function DonationPage(props: {
     params: Promise<{ pageID: string }>;
 }) {
     const params = await props.params;
-    const page = await getPage(params.pageID);
+    const page = await getPageOrNotFound(params.pageID);
     const rawDonations = (await listDonations({
         include: {
             donor: true,
