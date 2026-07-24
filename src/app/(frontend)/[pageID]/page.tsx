@@ -1,6 +1,7 @@
 import { listDonations } from '@db/ops/donations/listDonations';
 import type { Donation, Donor, Page } from '@db/schema';
 import { donations } from '@db/schema';
+import { DonateDrawer } from '@frontend/[pageID]/DonateDrawer';
 import { getPageOrNotFound } from '@frontend/[pageID]/getPageOrNotFound';
 import { SimplePage } from '@frontend/[pageID]/SimplePage';
 import { StoryPage } from '@frontend/[pageID]/StoryPage';
@@ -152,6 +153,7 @@ export default async function DonationPage(props: {
                         />
                     )}
                 </div>
+                <DonateDrawer page={page} />
                 <ThanksDialog page={page} />
             </main>
             <footer
