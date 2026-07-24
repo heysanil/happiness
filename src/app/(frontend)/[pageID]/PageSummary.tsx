@@ -41,16 +41,7 @@ export const PageSummary: FC<{
         {page.status !== 'published' ? null : (
             <div className="w-full flex flex-col gap-[8px] mb-3">
                 {!embed ? (
-                    <DonateButton
-                        projectName={
-                            page.fsProject ||
-                            page.organizer ||
-                            HappinessConfig.fiscalSponsorName ||
-                            HappinessConfig.name
-                        }
-                        pageID={page.id}
-                        presets={page.presets}
-                    />
+                    <DonateButton />
                 ) : (
                     <Button
                         href={`${HappinessConfig.defaultBaseURL}/${page.slug}?open=donate&utm_source=embed`}
