@@ -4,7 +4,7 @@
 
 ## Getting Started
 
-`happiness` is currently built to run on Vercel's Edge Runtime using PlanetScale's serverless driver. Other MySQL databases should work by adjusting the Drizzle configuration to use `mysql2` instead of the PlanetScale driver, but are currently untested.
+`happiness` runs on the Next.js nodejs runtime and uses PlanetScale's serverless driver by default. Any standard MySQL database can be used instead by setting `DATABASE_DRIVER=mysql2`, which switches Drizzle over to the `mysql2` driver; this path is exercised by the E2E test suite.
 
 To get started, create a clone of this repository:
 
@@ -13,26 +13,26 @@ git clone --mirror https://github.com/heysanil/happiness
 # or, click "Use this template" on GitHub
 ```
 
-Install dependencies using `pnpm`:
+Install dependencies using `bun`:
 ```bash
-pnpm install
+bun install
 ```
 
-Copy `.env.example` to `.env.local` and set the required environmental variables. As of now, you'll need to sign up for Stripe (for payment processing). If you want Happiness to fire webhooks, you can optionally add a Zeplo queue for more reliable and asynchronous queueing.
+Copy `.env.example` to `.env.local` and set the required environmental variables. At minimum you'll need to sign up for Stripe (for payment processing). The donor portal additionally requires `BETTER_AUTH_SECRET`, an Upstash Redis instance, and SMTP credentials for sending one-time login codes.
 
 You can also directly modify the configuration in `happiness.config.ts` and replace icons/logos in `public`.
 
 Push the database schema to your database:
 
 ```bash
-pnpm db:push
+bun db:push
 ```
 
 This will create the required tables with a `happiness_` prefix, so you can use an existing database (all future schema pushes will also be scoped to `happiness_`-prefixed tables).
 
-Then, run the development server using `pnpm dev` (or the production server using `pnpm start`).
+Then, run the development server using `bun dev` (or the production server using `bun start`). The dev server port can be set with `HP_DEV_PORT` and defaults to 3000.
 
-You can also open a Drizzle Studio UI using `pnpm db:gui`, or run both the development server and Drizzle Studio UI using `pnpm dev:db`. Drizzle Studio runs on port 3100 by default, but this behavior can be changed in `package.json`.
+You can also open a Drizzle Studio UI using `bun db:gui`, or run both the development server and Drizzle Studio UI using `bun dev:db`. Drizzle Studio runs on port 3100 by default, but this behavior can be changed in `package.json`.
 
 **NOTE: To complete setup, you also need to set up the correct webhooks on the Stripe Dashboard.** Using a service like Zeplo as a proxy to forward webhooks to your app is recommended, which will give you more control over logging and retries, but you can also point Stripe directly to the `/v1/external/stripe` endpoint.
 
@@ -76,6 +76,6 @@ The API docs are generated using Stoplight Elements, and live in [src/app/(api)/
 ## Coming soon
 
 - [ ] Administrator portal and dashboard
-  - [ ] Stripe Connect + multi-tenancy
+- [x] Stripe Connect support (`STRIPE_ACCOUNT_ID`), with per-deployment webhook isolation for instances sharing a Stripe account (`HAPPINESS_INSTANCE_ID`)
 - [ ] API key management
 - [ ] Updater for smooth upgrades instead of relying on Git cloning
