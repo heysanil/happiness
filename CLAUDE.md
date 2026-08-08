@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is this?
 
-Happiness is an open-source donation page platform built with Next.js 13 (App Router), Drizzle ORM, PlanetScale/MySQL, and Stripe. It powers customizable fundraiser pages with two page types: "simple" and "story".
+Happiness is an open-source donation page platform built with Next.js 16 (App Router), React 19, Drizzle ORM, PlanetScale/MySQL, and Stripe. It powers customizable fundraiser pages with two page types: "simple" and "story".
 
 ## Commands
 
@@ -16,6 +16,7 @@ bun build                # Production build
 bun lint                 # Biome lint + format check
 bun lint:fix             # Biome lint + format auto-fix
 bun format               # Biome format auto-fix
+bun typecheck            # TypeScript check (tsc --noEmit)
 bun db:push              # Push Drizzle schema to MySQL database
 bun db:gui               # Open Drizzle Studio on port 3100
 bun test:e2e             # Run Playwright E2E tests (requires Docker services)
@@ -35,9 +36,9 @@ The app uses two route groups under `src/app/`:
 
 ### Database Layer
 
-- **Schema**: `src/db/schema.ts` — Three entities: `pages`, `donations`, `donors`. Each has a corresponding `*_deleted` soft-delete table. All tables are prefixed with the configurable `databaseTablePrefix` (default: `happiness_`).
+- **Schema**: `src/db/schema.ts` — Three entities: `pages`, `donations`, `donors`. Each has a corresponding `*_deleted` soft-delete table. All tables are prefixed with the configurable `databaseTablePrefix` (`DATABASE_TABLE_PREFIX` env var, default `happiness`), joined to the table name with an underscore — e.g. `happiness_pages`.
 - **Init**: `src/db/init.ts` — PlanetScale serverless driver with Drizzle ORM (default). Supports `DATABASE_DRIVER=mysql2` env var to switch to standard MySQL for local/test environments.
-- **Operations**: `src/db/ops/` — One file per operation (e.g., `getPage.ts`, `listDonations.ts`, `upsertDonor.ts`). Shared validation helpers in `ops/shared.ts`.
+- **Operations**: `src/db/ops/` — Grouped into per-entity directories (`pages/`, `donations/`, `donors/`), one file per operation (e.g., `pages/getPage.ts`, `donations/listDonations.ts`, `donors/upsertDonor.ts`). Shared validation helpers in `ops/shared.ts`.
 - **Zod schemas** are generated from Drizzle schemas via `drizzle-zod` and exported from `schema.ts` (e.g., `insertPageSchema`, `selectPageSchema`).
 
 ### API Conventions
@@ -56,7 +57,7 @@ The app uses two route groups under `src/app/`:
 ### Configuration
 
 - `happiness.config.ts` — Central config (app name, logos, fiscal sponsor settings, platform fee). Most values are overridable via `NEXT_PUBLIC_*` env vars.
-- `.env.example` — Required env vars: `HAPPINESS_ROOT_API_KEY`, `DATABASE_URL`, `STRIPE_SECRET_KEY`.
+- `.env.example` — Core env vars: `HAPPINESS_ROOT_API_KEY`, `DATABASE_URL`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`. The donor portal additionally needs `BETTER_AUTH_SECRET`, `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, and the `SMTP_*` vars. Optional: `STRIPE_ACCOUNT_ID` / `NEXT_PUBLIC_STRIPE_ACCOUNT_ID` (Connect) and `HAPPINESS_INSTANCE_ID` (per-deployment webhook isolation).
 
 ### Path Aliases (tsconfig)
 
@@ -86,11 +87,11 @@ Uses Changesets for versioning. Conventional commits enforced via commitlint + L
 
 ### E2E Testing
 
-56 Playwright tests across 13 spec files, organized into three tiers:
+88 Playwright tests across 17 spec files, organized into three tiers:
 
-- **API tests** (`e2e/api/`) — 25 tests covering Pages, Donations, Donors CRUD, and Stripe webhook handling. Use Playwright's `request` context (no browser).
-- **Frontend tests** (`e2e/frontend/`) — 28 browser tests for home page, donation pages, embed, portal OTP login, donor dashboard, and receipt PDFs.
-- **Flow tests** (`e2e/flows/`) — 3 end-to-end journeys combining API + browser: one-time donation, recurring donation, and full donor portal flow.
+- **API tests** (`e2e/api/`) — 41 tests across 6 spec files covering Pages, Donations, Donors CRUD, request idempotency, donation presets, and Stripe webhook handling. Use Playwright's `request` context (no browser).
+- **Frontend tests** (`e2e/frontend/`) — 44 tests across 8 spec files for the home page, simple and story donation pages, embed, presets, portal OTP login, donor dashboard, and receipt PDFs.
+- **Flow tests** (`e2e/flows/`) — 3 end-to-end journeys across 3 spec files combining API + browser: one-time donation, recurring donation, and full donor portal flow.
 
 **Infrastructure** (`docker-compose.test.yml`):
 - MySQL 8.0 on port 3307 — test database with Drizzle schema push
@@ -112,4 +113,4 @@ Uses Changesets for versioning. Conventional commits enforced via commitlint + L
 
 ### Runtime
 
-Next.js nodejs runtime (not edge). Frontend pages use `revalidate = 60` for ISR with stale-while-revalidate caching.
+Next.js nodejs runtime (not edge), set in both route-group layouts. Fundraiser pages (`[pageID]/page.tsx` and `[pageID]/embed/page.tsx`) combine `dynamic = 'force-static'` with `revalidate = 60` for ISR with stale-while-revalidate caching; the donor dashboard uses `dynamic = 'force-dynamic'`.
