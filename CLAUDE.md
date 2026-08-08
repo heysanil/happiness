@@ -9,6 +9,7 @@ Happiness is an open-source donation page platform built with Next.js 16 (App Ro
 ## Commands
 
 ```bash
+mise install             # Install pinned toolchain (Node, Bun, lefthook) + git hooks
 bun install              # Install dependencies
 bun dev                  # Dev server (port from HP_DEV_PORT env, default 3000)
 bun dev:db               # Dev server + Drizzle Studio (port 3100) concurrently
@@ -74,6 +75,14 @@ The app uses two route groups under `src/app/`:
 ### Styling
 
 Tailwind CSS + SCSS modules. The `paris` UI library is used for typography and toast components. Fonts loaded from `slingshot.fm`.
+
+### Toolchain
+
+`mise.toml` pins exact versions of the runtimes and standalone binaries: Node 24.19.0, Bun 1.3.14, and lefthook 2.1.4. Everything else the project depends on — Biome, Playwright, drizzle-kit, commitlint — stays an npm dependency pinned by `bun.lock`, so each tool has exactly one source of truth. Don't duplicate an npm-managed tool into `mise.toml`.
+
+lefthook carries a `postinstall` that runs `lefthook install`, so `mise install` is enough to get working git hooks on a fresh clone; it is skipped when `$CI` is set. If hooks silently don't fire, check for a stale `core.hooksPath` (`git config --unset core.hooksPath`).
+
+CI installs the same toolchain via `jdx/mise-action@v4` instead of `setup-bun`/`setup-node`, so local and CI versions can't drift. All three workflows run on Namespace runners (`namespace-profile-default`); `docs-sentinel.yml` calls a reusable workflow, so it passes the label through the `runner` input rather than `runs-on`.
 
 ### Versioning & Releases
 

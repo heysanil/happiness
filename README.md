@@ -13,6 +13,18 @@ git clone --mirror https://github.com/heysanil/happiness
 # or, click "Use this template" on GitHub
 ```
 
+Tool versions (Node, Bun, and lefthook) are pinned in `mise.toml`. Install [mise](https://mise.jdx.dev), then let it provision the toolchain — this also installs the git hooks defined in `lefthook.yml`:
+
+```bash
+mise install
+```
+
+If you cloned this repository back when it used husky, clear the stale hooks path first — otherwise git keeps looking for hooks in a `.husky` directory that no longer exists, and the checks below silently never run:
+
+```bash
+git config --unset core.hooksPath
+```
+
 Install dependencies using `bun`:
 ```bash
 bun install

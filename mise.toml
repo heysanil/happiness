@@ -1,0 +1,11 @@
+[tools]
+# Runtimes and standalone binaries only. Everything else the project depends on
+# (Biome, Playwright, drizzle-kit, commitlint) stays an npm dependency pinned by
+# bun.lock, so each tool has exactly one source of truth.
+node = "24.19.0"
+bun = "1.3.14"
+
+# `postinstall` replaces the npm postinstall that installed git hooks back when
+# lefthook was a devDependency, so a fresh clone only needs `mise install`.
+# Skipped in CI, where git hooks never fire.
+lefthook = { version = "2.1.4", postinstall = 'test -n "$CI" || lefthook install' }
