@@ -4,6 +4,7 @@ import { IDParameter } from '@docs/oas/schemas/id';
 import { PageSchema } from '@docs/oas/schemas/pages';
 import { bearerAuth } from '@docs/oas/schemas/security';
 import { ErrorResponses, ErrorSchema } from '@docs/oas/shared/errorResponses';
+import { DONATIONS_ID_RECEIPT_EMAIL_POST_SCHEMA } from '@v1/donations/[id]/receipt/email/schemas';
 import { DONATIONS_ID_GET_SCHEMA } from '@v1/donations/[id]/schemas';
 import {
     DONATIONS_GET_SCHEMA,
@@ -72,6 +73,9 @@ export const oas = new OpenApiBuilder({
         },
         '/v1/donations/{id}': {
             get: DONATIONS_ID_GET_SCHEMA,
+        },
+        '/v1/donations/{id}/receipt/email': {
+            post: DONATIONS_ID_RECEIPT_EMAIL_POST_SCHEMA,
         },
     },
 });
