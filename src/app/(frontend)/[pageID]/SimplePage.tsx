@@ -72,17 +72,7 @@ export const SimplePage: FC<{
                     </Text>
 
                     <div className="w-full md:w-[280px] flex flex-col md:flex-row gap-3">
-                        <DonateButton
-                            projectName={
-                                page.fsProject ||
-                                page.organizer ||
-                                HappinessConfig.fiscalSponsorName ||
-                                HappinessConfig.name
-                            }
-                            pageID={page.id}
-                            className="w-full"
-                            presets={page.presets}
-                        />
+                        <DonateButton className="w-full" />
                         <ShareButton page={page} className="w-full" />
                     </div>
                 </div>

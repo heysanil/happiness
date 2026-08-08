@@ -48,9 +48,12 @@ export default async function globalTeardown(_config: FullConfig) {
 
     // 3. Clear MailPit mailbox
     try {
-        await fetch('http://localhost:8025/api/v1/messages', {
-            method: 'DELETE',
-        });
+        await fetch(
+            `${process.env.MAILPIT_URL || 'http://localhost:8025'}/api/v1/messages`,
+            {
+                method: 'DELETE',
+            },
+        );
         console.log('[e2e] MailPit mailbox cleared.');
     } catch (err) {
         console.error('[e2e] Failed to clear MailPit:', err);

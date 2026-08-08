@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 /** Base URL of the running Next.js application under test. */
-export const BASE_URL = 'http://localhost:3000';
+export const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
 /** Root API key used for authenticated admin requests. */
 export const API_KEY =
@@ -29,7 +29,7 @@ export const ANON_DONOR_PHONE = '+15555550100';
 
 // -- MailPit ----------------------------------------------------------------
 
-export const MAILPIT_URL = 'http://localhost:8025';
+export const MAILPIT_URL = process.env.MAILPIT_URL || 'http://localhost:8025';
 
 // -- Deterministic entity IDs -----------------------------------------------
 // These follow the project's ID convention: 2-char prefix + "_" + 13 alphanum
