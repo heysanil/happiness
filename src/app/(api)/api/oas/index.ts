@@ -3,12 +3,14 @@ import { DonorSchema } from '@docs/oas/schemas/donors';
 import { IDParameter } from '@docs/oas/schemas/id';
 import { PageSchema } from '@docs/oas/schemas/pages';
 import { bearerAuth } from '@docs/oas/schemas/security';
+import { DonationsStatsSchema } from '@docs/oas/schemas/stats';
 import { ErrorResponses, ErrorSchema } from '@docs/oas/shared/errorResponses';
 import { DONATIONS_ID_GET_SCHEMA } from '@v1/donations/[id]/schemas';
 import {
     DONATIONS_GET_SCHEMA,
     DONATIONS_POST_SCHEMA,
 } from '@v1/donations/schemas';
+import { DONATIONS_STATS_GET_SCHEMA } from '@v1/donations/stats/schemas';
 import { DONORS_SEARCH_GET_SCHEMA } from '@v1/donors/[search]/schemas';
 import { DONORS_GET_SCHEMA, DONORS_POST_SCHEMA } from '@v1/donors/schemas';
 import {
@@ -42,6 +44,7 @@ export const oas = new OpenApiBuilder({
             DonorPartial: DonorSchema(true, true),
             Donation: DonationSchema(true),
             DonationPartial: DonationSchema(true, true),
+            DonationsStats: DonationsStatsSchema,
         },
         requestBodies: {},
         responses: { ...ErrorResponses },
@@ -69,6 +72,9 @@ export const oas = new OpenApiBuilder({
         '/v1/donations': {
             get: DONATIONS_GET_SCHEMA,
             post: DONATIONS_POST_SCHEMA,
+        },
+        '/v1/donations/stats': {
+            get: DONATIONS_STATS_GET_SCHEMA,
         },
         '/v1/donations/{id}': {
             get: DONATIONS_ID_GET_SCHEMA,

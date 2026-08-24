@@ -5,9 +5,23 @@ import { ErrorResponse } from '@v1/responses/ErrorResponse';
 import { handleErrors } from '@v1/responses/handleErrors';
 import { NextResponse } from 'next/server';
 
-export const GET = async (): Promise<NextResponse> => {
+export const GET = async (request: Request): Promise<NextResponse> => {
     try {
-        return NextResponse.json(await listPages());
+        const { searchParams } = new URL(request.url);
+        const idsParam = searchParams.get('ids');
+
+        return NextResponse.json(
+            await listPages({
+                filter: {
+                    ids: idsParam
+                        ? idsParam
+                              .split(',')
+                              .map((id) => id.trim())
+                              .filter(Boolean)
+                        : undefined,
+                },
+            }),
+        );
     } catch (e) {
         return handleErrors(e);
     }
