@@ -96,9 +96,9 @@ Uses Changesets for versioning. Conventional commits enforced via commitlint + L
 
 ### E2E Testing
 
-88 Playwright tests across 17 spec files, organized into three tiers:
+103 Playwright tests across 18 spec files, organized into three tiers:
 
-- **API tests** (`e2e/api/`) — 41 tests across 6 spec files covering Pages, Donations, Donors CRUD, request idempotency, donation presets, and Stripe webhook handling. Use Playwright's `request` context (no browser).
+- **API tests** (`e2e/api/`) — 56 tests across 7 spec files covering Pages, Donations, Donors CRUD, request idempotency, donation presets, donation stats, and Stripe webhook handling. Use Playwright's `request` context (no browser).
 - **Frontend tests** (`e2e/frontend/`) — 44 tests across 8 spec files for the home page, simple and story donation pages, embed, presets, portal OTP login, donor dashboard, and receipt PDFs.
 - **Flow tests** (`e2e/flows/`) — 3 end-to-end journeys across 3 spec files combining API + browser: one-time donation, recurring donation, and full donor portal flow.
 

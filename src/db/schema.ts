@@ -2,6 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
     bigint,
     boolean,
+    index,
     json,
     mysqlEnum,
     mysqlTableCreator,
@@ -104,7 +105,16 @@ export const DonationsColumns = {
     refunded: boolean('refunded').notNull().default(false),
 } as const;
 
-export const donations = mysqlTable('donations', DonationsColumns);
+export const donations = mysqlTable('donations', DonationsColumns, (table) => ({
+    // Donation aggregates are always scoped to a set of pages and then
+    // windowed by creation date, so `pageID` leads and `createdAt` follows:
+    // the same index serves both the all-time and since-date aggregates.
+    pageCreatedAtIdx: index('page_created_at_idx').on(
+        table.pageID,
+        table.createdAt,
+    ),
+    donorIdx: index('donor_idx').on(table.donorID),
+}));
 export const donationsDeleted = mysqlTable(
     'donations_deleted',
     DonationsColumns,

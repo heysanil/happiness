@@ -1,6 +1,7 @@
 import { PageSchema } from '@docs/oas/schemas/pages';
 import { errorResponses } from '@docs/oas/shared/errorResponses';
 import type { OperationObject } from 'openapi3-ts/oas30';
+import { Prefixes } from 'src/util/generateID';
 
 export const PAGES_GET_SCHEMA: OperationObject = {
     operationId: 'listPages',
@@ -8,6 +9,18 @@ export const PAGES_GET_SCHEMA: OperationObject = {
     description:
         'Retrieves a list of all pages, optionally filtered by query parameters.',
     tags: ['Pages'],
+    parameters: [
+        {
+            name: 'ids',
+            in: 'query',
+            description:
+                'Optionally, a comma-separated list of page IDs to restrict the results to. When omitted, every page is returned.',
+            example: `?ids=${Prefixes.Page}_1a2b3c4d5e6f7,${Prefixes.Page}_7f6e5d4c3b2a1`,
+            schema: {
+                type: 'string',
+            },
+        },
+    ],
     responses: {
         200: {
             description: 'Returns an array of [Page](/schemas/Page) objects.',

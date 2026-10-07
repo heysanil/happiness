@@ -53,8 +53,9 @@ export class TestAPIClient {
     }
 
     /** Public — no auth required */
-    listPages() {
-        return this.request('GET', '/v1/pages', undefined, false);
+    listPages(params?: Record<string, string>) {
+        const qs = params ? `?${new URLSearchParams(params).toString()}` : '';
+        return this.request('GET', `/v1/pages${qs}`, undefined, false);
     }
 
     updatePage(id: string, data: Record<string, unknown>) {
@@ -85,6 +86,11 @@ export class TestAPIClient {
     listDonations(params?: Record<string, string>) {
         const qs = params ? `?${new URLSearchParams(params).toString()}` : '';
         return this.request('GET', `/v1/donations${qs}`);
+    }
+
+    getDonationsStats(params?: Record<string, string>) {
+        const qs = params ? `?${new URLSearchParams(params).toString()}` : '';
+        return this.request('GET', `/v1/donations/stats${qs}`);
     }
 
     // -- Donors ---------------------------------------------------------------
